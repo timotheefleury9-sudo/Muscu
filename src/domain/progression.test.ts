@@ -98,4 +98,8 @@ describe('suggestNext', () => {
     const f = (w: number) => sess(S(w, 7), S(w, 7), S(w, 7))
     expect(suggestNext([f(2), f(2), f(2)], slot, ex)).toMatchObject({ reason: 'repeat' })
   })
+  it('poids du corps lesté 2,5 kg, 3 échecs → deload à 0 kg', () => {
+    const f = three(2.5, 7)
+    expect(suggestNext([f, f, f], slot, bw)).toEqual({ kind: 'sets', reason: 'deload', sets: sets(0, 8) })
+  })
 })
