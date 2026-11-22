@@ -1,0 +1,43 @@
+import { db } from './db'
+import type { AppData, Exercise, Session, SetLog, TemplateExercise, WorkoutTemplate } from '../domain/types'
+
+export const listExercises = (): Promise<Exercise[]> => db.exercises.toArray()
+export const saveExercise = async (e: Exercise): Promise<void> => { await db.exercises.put(e) }
+
+export const listTemplates = async (): Promise<WorkoutTemplate[]> => db.templates.orderBy('rotationOrder').toArray()
+export const saveTemplate = async (t: WorkoutTemplate): Promise<void> => { await db.templates.put(t) }
+/** Supprime le modèle et ses lignes d'exercices ; l'historique (séances, séries) est conservé. */
+export const deleteTemplate = (id: string): Promise<void> =>
+  db.transaction('rw', db.templates, db.templateExercises, async () => {
+    await db.templateExercises.where('templateId').equals(id).delete()
+    await db.templates.delete(id)
+  })
+
+export const listTemplateExercises = async (templateId: string): Promise<TemplateExercise[]> =>
+  (await db.templateExercises.where('templateId').equals(templateId).toArray()).sort((a, b) => a.order - b.order)
+export const saveTemplateExercise = async (te: TemplateExercise): Promise<void> => { await db.templateExercises.put(te) }
+/** Ne touche à aucun SetLog. */
+export const deleteTemplateExercise = (id: string): Promise<void> => db.templateExercises.delete(id)
+
+export const getOpenSession = async (): Promise<Session | undefined> =>
+  (await db.sessions.toArray()).find((s) => s.endedAt === null)
+export async function startSession(templateId: string): Promise<Session> {
+  const s: Session = { id: crypto.randomUUID(), templateId, startedAt: new Date().toISOString(), endedAt: null }
+  await db.sessions.add(s)
+  return s
+}
+export const endSession = async (id: string): Promise<void> => {
+  await db.sessions.update(id, { endedAt: new Date().toISOString() })
+}
+
+export const listSets = async (sessionId: string): Promise<SetLog[]> =>
+  (await db.sets.where('sessionId').equals(sessionId).toArray()).sort((a, b) => a.setIndex - b.setIndex)
+export const saveSet = async (s: SetLog): Promise<void> => { await db.sets.put(s) }
+export const deleteSet = (id: string): Promise<void> => db.sets.delete(id)
+
+export async function loadAll(): Promise<AppData> {
+  const [exercises, templates, templateExercises, sessions, sets] = await Promise.all([
+    db.exercises.toArray(), db.templates.toArray(), db.templateExercises.toArray(), db.sessions.toArray(), db.sets.toArray(),
+  ])
+  return { exercises, templates, templateExercises, sessions, sets }
+}

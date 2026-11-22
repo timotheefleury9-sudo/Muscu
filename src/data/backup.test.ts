@@ -1,0 +1,57 @@
+import { beforeEach, describe, expect, it } from 'vitest'
+import { db } from './db'
+import { exportData, importData } from './backup'
+import { loadAll, saveExercise, saveSet, saveTemplate, saveTemplateExercise, startSession } from './repo'
+import type { AppData } from '../domain/types'
+
+beforeEach(async () => {
+  await db.delete()
+  await db.open()
+})
+
+const sorted = (d: AppData): AppData => {
+  const by = <T extends { id: string }>(a: T[]) => [...a].sort((x, y) => x.id.localeCompare(y.id))
+  return {
+    exercises: by(d.exercises), templates: by(d.templates), templateExercises: by(d.templateExercises),
+    sessions: by(d.sessions), sets: by(d.sets),
+  }
+}
+
+async function seed() {
+  await saveExercise({ id: 'e1', name: 'Développé couché', primaryGroup: 'pectoraux', secondaryGroups: ['triceps'], equipment: 'barre', kind: 'compound', increment: 2.5, bodyweight: false, custom: false })
+  await saveTemplate({ id: 't1', name: 'Push', rotationOrder: 0 })
+  await saveTemplateExercise({ id: 'te1', templateId: 't1', exerciseId: 'e1', order: 0, sets: 3, repsMin: 6, repsMax: 10, restSec: 120 })
+  const s = await startSession('t1')
+  await saveSet({ id: 'set1', sessionId: s.id, exerciseId: 'e1', templateExerciseId: 'te1', setIndex: 0, plannedWeight: 60, plannedReps: 8, weight: 60, reps: 8, done: true })
+}
+
+describe('backup', () => {
+  it('export puis effacement puis import redonne loadAll identique', async () => {
+    await seed()
+    const before = sorted(await loadAll())
+    const json = await exportData()
+    const parsed = JSON.parse(json)
+    expect(parsed.format).toBe('muscu-backup')
+    expect(parsed.version).toBe(1)
+    expect(typeof parsed.exportedAt).toBe('string')
+    await db.delete()
+    await db.open()
+    expect((await loadAll()).sets).toHaveLength(0)
+    expect(await importData(json)).toEqual({ ok: true })
+    expect(sorted(await loadAll())).toEqual(before)
+  })
+
+  it.each([
+    ['{}', '{}'],
+    ['pas du json', 'pas du json'],
+    ['version 2', JSON.stringify({ format: 'muscu-backup', version: 2, exportedAt: 'x', data: { exercises: [], templates: [], templateExercises: [], sessions: [], sets: [] } })],
+    ['données mal formées', JSON.stringify({ format: 'muscu-backup', version: 1, exportedAt: 'x', data: { exercises: [] } })],
+  ])('refuse %s et laisse les données intactes', async (_n, input) => {
+    await seed()
+    const before = sorted(await loadAll())
+    const res = await importData(input)
+    expect(res.ok).toBe(false)
+    if (!res.ok) expect(res.error.length).toBeGreaterThan(0)
+    expect(sorted(await loadAll())).toEqual(before)
+  })
+})
