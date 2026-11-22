@@ -76,7 +76,7 @@ body {
   display: flex;
   background: var(--surface);
   border-top: 1px solid var(--border);
-  padding: 0 calc(var(--safe-right) + 8px) max(var(--safe-bottom), 8px) calc(var(--safe-left) + 8px);
+  padding: 6px calc(var(--safe-right) + 8px) max(var(--safe-bottom), 8px) calc(var(--safe-left) + 8px);
 }
 
 .tab {
