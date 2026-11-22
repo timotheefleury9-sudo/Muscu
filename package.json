@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "TZ=Europe/Paris vitest run",
     "icons": "node scripts/make-icons.mjs",
     "catalog": "node --experimental-strip-types scripts/build-catalog.ts"
   },
