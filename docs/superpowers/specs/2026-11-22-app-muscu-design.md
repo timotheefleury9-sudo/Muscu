@@ -67,14 +67,14 @@ Elle est d'abord pour lui. Il la partage ensuite à des amis, qui suivent leurs 
   - évolution de chaque exercice vs semaine précédente.
 - **Détail par muscle** : toucher un groupe musculaire dans le bilan → liste des exercices de ce muscle faits cette semaine, avec séries, meilleure série et évolution.
 - **Détail par exercice** : toucher un exercice → courbe sur plusieurs semaines.
-- **Partage** : les amis reçoivent un lien, utilisent l'app pour eux-mêmes et envoient des retours.
+- **Partage** : les amis reçoivent un lien, utilisent l'app pour eux-mêmes et font leurs retours à Tim directement (pas de bouton de retour dans l'app).
 
 ## 6. Écrans
 
 1. **Aujourd'hui / séance** : propose la prochaine séance de la rotation (Push → Pull → Legs). Liste des exercices ; pour chacun, les séries pré-remplies (poids × reps). Tap = série faite. Modification rapide du poids et des reps (boutons +/- avec l'incrément de l'exercice, ou saisie). Ajouter / supprimer une série, sauter un exercice. Terminer la séance.
 2. **Programmes** : liste des templates ; édition (ordre des exercices, nombre de séries, fourchette de reps, temps de repos indicatif — affiché seulement, pas de minuteur). Sélecteur d'exercices avec recherche et filtre par muscle ; création d'exercices personnalisés.
 3. **Progression** : bilan hebdo (navigation semaine précédente / suivante) → détail muscle → détail exercice (courbe).
-4. **Réglages** : export / import des données (JSON), bouton « Envoyer un retour » (ouvre un mail prérempli avec version de l'app ; adresse de destination à fournir par Tim, stockée dans un fichier de configuration), incréments par défaut.
+4. **Réglages** : export / import des données (JSON), incréments par défaut.
 
 ## 7. Règles métier
 
