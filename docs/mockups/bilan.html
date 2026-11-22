@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maquette : bilan de la semaine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<style>
+/* ---------- Jetons (identiques à seance.html) ---------- */
+:root {
+  --page: #26272b;
+  --bg: #121316;
+  --surface: #1c1d21;
+  --surface-2: #26282d;
+  --line: #303238;
+  --text: #f4f2ed;
+  --muted: #a09f9a;
+  --faint: #6c6b68;
+  --primary-bg: #f4f2ed;
+  --primary-ink: #121316;
+  --success: #5bd28c;
+  --success-soft: rgba(91, 210, 140, 0.14);
+  --warn: #f3a243;
+  --warn-soft: rgba(243, 162, 67, 0.14);
+  --r-card: 22px;
+  --r-row: 14px;
+  --t-fast: 160ms;
+  --t: 220ms;
+  --t-chart: 280ms;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --font: 'Archivo', -apple-system, system-ui, sans-serif;
+  color-scheme: dark;
+}
+[data-theme="light"] {
+  --page: #dcdcd7;
+  --bg: #f3f3f0;
+  --surface: #ffffff;
+  --surface-2: #e9e9e5;
+  --line: #dcdcd6;
+  --text: #17181b;
+  --muted: #5f5f5b;
+  --faint: #9a9a95;
+  --primary-bg: #17181b;
+  --primary-ink: #f6f6f3;
+  --success: #157a43;
+  --success-soft: rgba(21, 122, 67, 0.10);
+  --warn: #b25d00;
+  --warn-soft: rgba(178, 93, 0, 0.10);
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  min-height: 100vh; background: var(--page); color: var(--text); font-family: var(--font);
+  -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--t) var(--ease), color var(--t) var(--ease);
+}
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+button:disabled { cursor: default; opacity: 0.3; }
+.num { font-stretch: 72%; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- Page ---------- */
+.intro { max-width: 1260px; margin: 0 auto; padding: 40px 24px 0; display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: flex-end; justify-content: space-between; }
+.intro h1 { font-size: 1.6rem; margin: 0 0 6px; }
+.intro p { margin: 0; color: var(--muted); max-width: 62ch; line-height: 1.5; }
+.theme-toggle { display: inline-flex; padding: 4px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+.theme-toggle button { min-height: 40px; padding: 0 18px; border-radius: 999px; font-weight: 600; font-size: 0.9rem; color: var(--muted); transition: background-color var(--t) var(--ease), color var(--t) var(--ease); }
+.theme-toggle button[aria-pressed="true"] { background: var(--primary-bg); color: var(--primary-ink); }
+.stage { display: flex; flex-wrap: wrap; gap: 56px 48px; justify-content: center; padding: 48px 24px 72px; }
+figure { margin: 0; }
+figcaption { margin-top: 28px; text-align: center; color: var(--muted); font-size: 0.95rem; }
+figcaption strong { color: var(--text); display: block; font-size: 1rem; margin-bottom: 2px; }
+
+/* ---------- Téléphone ---------- */
+.phone {
+  position: relative; width: 390px; height: 844px; border-radius: 55px; overflow: hidden; background: var(--bg);
+  box-shadow: 0 0 0 11px #050506, 0 0 0 12px #3b3c41, 0 50px 90px -30px rgba(0, 0, 0, 0.55);
+  display: flex; flex-direction: column; transition: background-color var(--t) var(--ease);
+}
+.statusbar { height: 54px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 30px 0 40px; font-weight: 600; font-size: 16px; position: relative; z-index: 3; }
+.island { position: absolute; left: 50%; top: 11px; width: 124px; height: 36px; margin-left: -62px; border-radius: 20px; background: #000; }
+.sb-icons { display: flex; gap: 6px; align-items: center; }
+.stack { position: relative; flex: 1; overflow: hidden; }
+.screen {
+  position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 16px 32px;
+  background: var(--bg); scrollbar-width: none;
+  transition: transform var(--t) var(--ease), opacity var(--t) var(--ease), background-color var(--t) var(--ease);
+}
+.screen::-webkit-scrollbar { display: none; }
+.screen.is-under { transform: translateX(-28%); opacity: 0.4; pointer-events: none; }
+.screen.is-right { transform: translateX(100%); }
+.tabbar { flex: none; height: 83px; display: flex; padding: 0 8px 30px; background: var(--surface); border-top: 1px solid var(--line); position: relative; z-index: 3; }
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; font-weight: 600; color: var(--faint); min-height: 44px; text-align: center; }
+.tab svg { width: 24px; height: 24px; }
+.tab.is-active { color: var(--text); }
+.home-ind { position: absolute; bottom: 8px; left: 50%; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: var(--text); opacity: 0.85; z-index: 4; }
+
+/* ---------- Éléments communs ---------- */
+.card { background: var(--surface); border-radius: var(--r-card); padding: 16px; transition: background-color var(--t) var(--ease); }
+.card + .card { margin-top: 12px; }
+.card-title { font-size: 17px; font-weight: 700; margin: 2px 2px 10px; }
+.page-title { font-size: 34px; font-weight: 800; font-stretch: 85%; letter-spacing: -0.02em; margin: 8px 4px 14px; line-height: 1.05; }
+.back { min-height: 44px; display: inline-flex; align-items: center; gap: 2px; padding: 0 10px 0 0; font-weight: 600; font-size: 16px; color: var(--muted); }
+.back svg { width: 22px; height: 22px; }
+.chev { width: 16px; height: 16px; color: var(--faint); flex: none; }
+
+.delta { display: inline-flex; align-items: center; gap: 4px; padding: 0 10px; height: 28px; border-radius: 999px; font-size: 14px; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.delta svg { width: 12px; height: 12px; }
+.d-up { background: var(--success-soft); color: var(--success); }
+.d-eq { background: var(--surface-2); color: var(--muted); min-width: 40px; justify-content: center; }
+.d-stall { background: var(--warn-soft); color: var(--warn); }
+.tag { display: inline-block; font-size: 12px; font-weight: 600; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; margin-left: 6px; vertical-align: 1px; }
+
+/* ---------- Bilan ---------- */
+.week-nav { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border-radius: 999px; padding: 4px; margin-bottom: 12px; transition: background-color var(--t) var(--ease); }
+.week-nav button { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; }
+.week-nav button:not(:disabled):active { background: var(--surface-2); }
+.week-nav svg { width: 22px; height: 22px; }
+.week-label { text-align: center; }
+.week-label strong { display: block; font-size: 17px; }
+.week-label span { font-size: 13px; color: var(--muted); }
+.week-body { transition: opacity var(--t-fast) var(--ease), transform var(--t-fast) var(--ease); }
+.week-body.swap-l { opacity: 0; transform: translateX(-12px); }
+.week-body.swap-r { opacity: 0; transform: translateX(12px); }
+
+.kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.kpis .card { margin: 0; padding: 16px 16px 14px; min-height: 148px; display: flex; flex-direction: column; }
+.kpi-lab { font-size: 15px; color: var(--muted); }
+.kpi-val { font-size: 64px; line-height: 1; margin-top: 10px; }
+.kpi-val small { font-size: 30px; color: var(--faint); font-weight: 600; margin-left: 2px; }
+.pips { display: flex; gap: 4px; margin-top: auto; }
+.pips span { flex: 1; height: 6px; border-radius: 3px; background: var(--surface-2); transition: background-color var(--t) var(--ease); }
+.pips span.on { background: var(--text); }
+.kpi-sub { margin-top: auto; font-size: 13px; color: var(--muted); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.bars { display: flex; flex-direction: column; }
+.bar-row { display: grid; grid-template-columns: 96px 1fr 28px 16px; align-items: center; gap: 10px; min-height: 44px; border-radius: 10px; padding: 0 2px; }
+.bar-row:active { background: var(--surface-2); }
+.bar-name { font-size: 15px; font-weight: 500; }
+.bar-track { display: block; height: 8px; }
+.bar-fill { display: block; height: 8px; border-radius: 4px; background: var(--text); width: 0; transition: width var(--t-chart) var(--ease); }
+.bar-count { font-size: 20px; text-align: right; }
+.bars-empty { font-size: 13px; color: var(--muted); margin: 8px 2px 2px; line-height: 1.4; }
+
+.ex-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 60px; padding: 8px 2px; border-top: 1px solid var(--line); }
+.ex-row:first-of-type { border-top: 0; }
+.ex-main { flex: 1; min-width: 0; }
+.ex-name { font-size: 15px; font-weight: 600; line-height: 1.25; }
+.ex-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* ---------- Détail muscle ---------- */
+.hero { margin: 0 4px 16px; }
+.hero-val { font-size: 72px; line-height: 0.95; }
+.hero-val small { font-size: 24px; font-weight: 600; color: var(--muted); margin-left: 6px; font-stretch: 100%; }
+.hero-sub { font-size: 15px; color: var(--muted); margin-top: 6px; }
+.hero-sub .up { color: var(--success); font-weight: 600; }
+
+/* ---------- Détail exercice ---------- */
+.seg { display: flex; padding: 4px; border-radius: 999px; background: var(--surface); margin: 0 0 12px; }
+.seg button { flex: 1; min-height: 40px; border-radius: 999px; text-align: center; font-weight: 600; font-size: 14px; color: var(--muted); transition: background-color var(--t) var(--ease), color var(--t) var(--ease); }
+.seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--text); }
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .axis-lab { fill: var(--faint); font-size: 11px; font-family: var(--font); }
+.chart .line { fill: none; stroke: var(--text); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 0; }
+.chart.draw .line { animation: draw var(--t-chart) var(--ease); }
+@keyframes draw { from { stroke-dashoffset: 1; } }
+.chart .dot { fill: var(--surface); stroke: var(--text); stroke-width: 2; transition: r var(--t-fast) var(--ease), fill var(--t-fast) var(--ease); }
+.chart .dot.sel { fill: var(--text); }
+.chart .cross { stroke: var(--faint); stroke-width: 1; stroke-dasharray: 2 3; transition: transform var(--t-fast) var(--ease); }
+.chart .hit { fill: transparent; cursor: pointer; }
+.chart-note { font-size: 13px; color: var(--muted); margin: 10px 2px 0; }
+.log-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; min-height: 48px; padding: 10px 2px; border-top: 1px solid var(--line); }
+.log-row:first-of-type { border-top: 0; }
+.log-date { font-size: 15px; color: var(--muted); }
+.log-sets { font-size: 15px; font-weight: 600; text-align: right; }
+
+@media (max-width: 460px) {
+  .intro { padding: 20px 20px 0; }
+  .stage { padding: 20px 0 40px; gap: 32px; }
+  .phone { width: 100vw; height: 100svh; border-radius: 0; box-shadow: none; }
+  .statusbar { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}
+</style>
+</head>
+<body>
+<header class="intro">
+  <div>
+    <h1>Progression : bilan de la semaine</h1>
+    <p>Trois états du même écran. Chaque téléphone est cliquable : flèches de semaine, barres par muscle, exercices, retour en haut à gauche, points de la courbe.</p>
+  </div>
+  <div class="theme-toggle" role="group" aria-label="Thème">
+    <button type="button" data-theme-btn="dark" aria-pressed="true">Sombre</button>
+    <button type="button" data-theme-btn="light" aria-pressed="false">Clair</button>
+  </div>
+</header>
+
+<main class="stage">
+  <figure><div class="phone" data-start="bilan"></div><figcaption><strong>Bilan de la semaine</strong>Écran principal de Progression</figcaption></figure>
+  <figure><div class="phone" data-start="muscle"></div><figcaption><strong>Détail d'un muscle</strong>Après un tap sur « Pectoraux »</figcaption></figure>
+  <figure><div class="phone" data-start="exercise"></div><figcaption><strong>Courbe d'un exercice</strong>12 semaines, trous pour les semaines sans séance</figcaption></figure>
+</main>
+
+<script>
+(function () {
+  // ---------- Données d'exemple ----------
+  var GROUPS = ['Pectoraux', 'Dos', 'Épaules', 'Biceps', 'Triceps', 'Quadriceps', 'Ischios', 'Fessiers', 'Mollets', 'Abdos'];
+  // day : 0 = lundi (Push), 2 = mercredi (Pull), 4 = vendredi (Legs)
+  var EX = {
+    'Développé couché haltères': { m: 'Pectoraux', inc: 2, day: 0 },
+    'Presse pectoraux': { m: 'Pectoraux', inc: 2.5, day: 0 },
+    'Pec deck': { m: 'Pectoraux', inc: 2.5, day: 0 },
+    'Extension triceps poulie': { m: 'Triceps', inc: 2.5, day: 0 },
+    'Élévations latérales poulie': { m: 'Épaules', inc: 2.5, day: 0, stall: true },
+    'Tractions': { m: 'Dos', inc: 0, day: 2, bw: true },
+    'Tirage horizontal machine': { m: 'Dos', inc: 2.5, day: 2 },
+    'Rowing poulie': { m: 'Dos', inc: 2.5, day: 2 },
+    'Fly arrière': { m: 'Épaules', inc: 2.5, day: 2 },
+    'Curl haltères': { m: 'Biceps', inc: 2, day: 2 },
+    'Squat': { m: 'Quadriceps', inc: 2.5, day: 4 },
+    'Soulevé de terre': { m: 'Ischios', inc: 2.5, day: 4 },
+    'Fentes marchées avec sac': { m: 'Quadriceps', inc: 2, day: 4 },
+    'Leg extension': { m: 'Quadriceps', inc: 2.5, day: 4 }
+  };
+  // [exercice, poids, reps de la meilleure série, delta, record]
+  // delta : ['up', '+2 kg'] | ['eq'] | ['stall', 3]
+  var WEEKS = {
+    46: { range: '9 – 15 nov.', sessions: 3, rows: [
+      ['Développé couché haltères', 24, 12, ['up', '+1 rep']],
+      ['Presse pectoraux', 75, 12, ['up', '+1 rep'], true],
+      ['Pec deck', 45, 12, ['eq']],
+      ['Extension triceps poulie', 27.5, 12, ['up', '+2,5 kg']],
+      ['Élévations latérales poulie', 7.5, 13, ['eq']],
+      ['Tractions', 0, 8, ['eq']],
+      ['Tirage horizontal machine', 60, 11, ['up', '+2,5 kg']],
+      ['Rowing poulie', 50, 12, ['eq']],
+      ['Fly arrière', 12.5, 15, ['up', '+2 reps']],
+      ['Curl haltères', 14, 10, ['eq']],
+      ['Squat', 80, 8, ['up', '+2,5 kg']],
+      ['Soulevé de terre', 110, 6, ['eq']],
+      ['Fentes marchées avec sac', 12, 10, ['up', '+2 kg']],
+      ['Leg extension', 50, 13, ['up', '+1 rep']]
+    ] },
+    47: { range: '16 – 22 nov.', sessions: 2, rows: [
+      ['Développé couché haltères', 26, 12, ['up', '+2 kg'], true],
+      ['Presse pectoraux', 77.5, 11, ['up', '+2,5 kg'], true],
+      ['Pec deck', 45, 14, ['up', '+2 reps']],
+      ['Extension triceps poulie', 27.5, 12, ['eq']],
+      ['Élévations latérales poulie', 7.5, 13, ['stall', 3]],
+      ['Tractions', 0, 9, ['up', '+1 rep']],
+      ['Tirage horizontal machine', 60, 11, ['eq']],
+      ['Rowing poulie', 52.5, 12, ['up', '+2,5 kg']],
+      ['Fly arrière', 12.5, 15, ['eq']],
+      ['Curl haltères', 14, 10, ['eq']]
+    ] }
+  };
+  var FIRST_WEEK = 46, CURRENT_WEEK = 47, SETS_PER_EX = 3;
+  var MISSED = [40, 44]; // semaines sans séance
+  // Historique détaillé de la presse (les autres exercices sont générés)
+  var PRESS = { 36: [65, 12], 37: [67.5, 10], 38: [67.5, 12], 39: [70, 10], 41: [70, 12], 42: [72.5, 10], 43: [72.5, 12], 45: [75, 11], 46: [75, 12], 47: [77.5, 11] };
+  var PRESS_SETS = { 47: [11, 10, 9], 46: [12, 12, 12], 45: [11, 11, 10] };
+
+  // ---------- Outils ----------
+  var fmt = function (n) { return String(Math.round(n * 10) / 10).replace('.', ','); };
+  var epley = function (w, r) { return w * (1 + r / 30); };
+  var load = function (w, bw) { return bw && !w ? 'Poids du corps' : fmt(w) + ' kg'; };
+  function mondayOf(week) { var d = new Date(2026, 10, 16); d.setDate(d.getDate() + (week - 47) * 7); return d; }
+  function dayLabel(week, day) {
+    var d = mondayOf(week); d.setDate(d.getDate() + day);
+    return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }).replace(/^./, function (c) { return c.toUpperCase(); });
+  }
+  var ICON = {
+    left: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+    right: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>',
+    chev: '<svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l5 5-5 5"/></svg>',
+    up: '<svg viewBox="0 0 12 12" fill="currentColor"><path d="M6 2l4.5 6h-9z"/></svg>',
+    flat: '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 6h8"/></svg>'
+  };
+  function deltaHTML(d) {
+    if (d[0] === 'up') return '<span class="delta d-up">' + ICON.up + d[1] + '</span>';
+    if (d[0] === 'stall') return '<span class="delta d-stall">' + ICON.flat + 'Stagne ' + d[1] + ' sem.</span>';
+    return '<span class="delta d-eq" aria-label="Stable">=</span>';
+  }
+  function muscleCounts(week) {
+    var c = {}; WEEKS[week].rows.forEach(function (r) { var m = EX[r[0]].m; c[m] = (c[m] || 0) + SETS_PER_EX; }); return c;
+  }
+
+  // Historique sur 12 semaines (S36 → S47) d'un exercice
+  function history(name) {
+    var ex = EX[name], out = [];
+    var last = WEEKS[47].rows.filter(function (r) { return r[0] === name; })[0] || WEEKS[46].rows.filter(function (r) { return r[0] === name; })[0];
+    for (var w = 36; w <= 47; w++) {
+      if (MISSED.indexOf(w) >= 0 || (ex.day === 4 && w === 47)) { out.push({ week: w, v: null }); continue; }
+      if (name === 'Presse pectoraux') { out.push({ week: w, w: PRESS[w][0], r: PRESS[w][1] }); continue; }
+      var back = 47 - w, wt = last[1], reps = last[2];
+      if (back === 0 || (ex.day === 4 && back === 1)) { /* dernière séance réelle */ }
+      else if (ex.bw) { reps = Math.max(4, last[2] - Math.floor(back / 3)); }
+      else if (ex.stall && back < 4) { /* plat */ }
+      else { wt = Math.max(ex.inc, last[1] - Math.floor((back + (ex.stall ? 0 : 1)) / 4) * ex.inc); reps = 10 + (back % 3); }
+      out.push({ week: w, w: wt, r: reps });
+    }
+    return out;
+  }
+
+  // ---------- Écrans ----------
+  function bilanHTML(week) {
+    var W = WEEKS[week], counts = muscleCounts(week);
+    var groups = GROUPS.filter(function (g) { return counts[g]; }).sort(function (a, b) { return counts[b] - counts[a]; });
+    var empty = GROUPS.filter(function (g) { return !counts[g]; });
+    var max = Math.max(12, Math.max.apply(null, groups.map(function (g) { return counts[g]; })));
+    var records = W.rows.filter(function (r) { return r[4]; });
+    var pips = ''; for (var i = 0; i < 3; i++) pips += '<span class="' + (i < W.sessions ? 'on' : '') + '"></span>';
+    return '<h1 class="page-title">Progression</h1>' +
+      '<div class="week-nav">' +
+        '<button type="button" data-go="week" data-week="' + (week - 1) + '" aria-label="Semaine précédente"' + (week <= FIRST_WEEK ? ' disabled' : '') + '>' + ICON.left + '</button>' +
+        '<div class="week-label"><strong>Semaine ' + week + '</strong><span>' + W.range + '</span></div>' +
+        '<button type="button" data-go="week" data-week="' + (week + 1) + '" aria-label="Semaine suivante"' + (week >= CURRENT_WEEK ? ' disabled' : '') + '>' + ICON.right + '</button>' +
+      '</div>' +
+      '<div class="week-body">' +
+        '<div class="kpis">' +
+          '<div class="card"><span class="kpi-lab">Séances</span><span class="kpi-val num">' + W.sessions + '<small>/ 3</small></span><div class="pips" aria-hidden="true">' + pips + '</div></div>' +
+          '<div class="card"><span class="kpi-lab">Records</span><span class="kpi-val num">' + records.length + '</span><span class="kpi-sub">' + records.map(function (r) { return r[0]; }).join(', ') + '</span></div>' +
+        '</div>' +
+        '<section class="card"><h2 class="card-title">Séries par muscle</h2><div class="bars">' +
+          groups.map(function (g) {
+            return '<button type="button" class="bar-row" data-go="muscle" data-muscle="' + g + '" data-week="' + week + '">' +
+              '<span class="bar-name">' + g + '</span>' +
+              '<span class="bar-track"><span class="bar-fill" data-w="' + (counts[g] / max * 100) + '"></span></span>' +
+              '<span class="bar-count num">' + counts[g] + '</span>' + ICON.chev + '</button>';
+          }).join('') +
+          '</div>' + (empty.length ? '<p class="bars-empty">Aucune série : ' + empty.join(', ') + '</p>' : '') +
+        '</section>' +
+        '<section class="card"><h2 class="card-title">Exercices</h2>' +
+          W.rows.map(function (r) { return exRow(r, week, false); }).join('') +
+        '</section>' +
+      '</div>';
+  }
+  function exRow(r, week, detailed) {
+    var ex = EX[r[0]];
+    var sub = detailed
+      ? SETS_PER_EX + ' séries, meilleure ' + load(r[1], ex.bw) + ' × ' + r[2]
+      : load(r[1], ex.bw) + ' × ' + r[2];
+    return '<button type="button" class="ex-row" data-go="exercise" data-ex="' + r[0] + '" data-week="' + week + '">' +
+      '<span class="ex-main"><span class="ex-name">' + r[0] + '</span><span class="ex-sub" style="display:block">' + sub + (r[4] ? '<span class="tag">Record</span>' : '') + '</span></span>' +
+      deltaHTML(r[3]) + ICON.chev + '</button>';
+  }
+  function muscleHTML(muscle, week) {
+    var rows = WEEKS[week].rows.filter(function (r) { return EX[r[0]].m === muscle; });
+    var n = rows.length * SETS_PER_EX;
+    var prev = WEEKS[week - 1] ? (muscleCounts(week - 1)[muscle] || 0) : null;
+    var cmp = prev === null ? '' : n === prev ? 'Autant que la semaine ' + (week - 1)
+      : n > prev ? '<span class="up">+' + (n - prev) + '</span> par rapport à la semaine ' + (week - 1)
+      : (n - prev) + ' par rapport à la semaine ' + (week - 1);
+    return '<button type="button" class="back" data-go="back">' + ICON.left + 'Semaine ' + week + '</button>' +
+      '<h1 class="page-title">' + muscle + '</h1>' +
+      '<div class="hero"><div class="hero-val num">' + n + '<small>séries validées</small></div>' + (cmp ? '<div class="hero-sub">' + cmp + '</div>' : '') + '</div>' +
+      '<section class="card"><h2 class="card-title">Exercices de la semaine</h2>' + rows.map(function (r) { return exRow(r, week, true); }).join('') + '</section>';
+  }
+  function exerciseHTML(name, week) {
+    var ex = EX[name], muscle = ex.m;
+    return '<button type="button" class="back" data-go="back">' + ICON.left + muscle + '</button>' +
+      '<h1 class="page-title">' + name + '</h1>' +
+      '<div class="hero"><div class="hero-val num" data-hero></div><div class="hero-sub" data-hero-sub></div></div>' +
+      (ex.bw ? '' : '<div class="seg" role="group" aria-label="Mesure"><button type="button" data-metric="load" aria-pressed="true">Charge max</button><button type="button" data-metric="orm" aria-pressed="false">1RM estimé</button></div>') +
+      '<section class="card"><div class="chart" data-chart="' + name + '"></div>' +
+        '<p class="chart-note">Pas de séance en semaines ' + MISSED.join(' et ') + (ex.day === 4 ? ' et 47' : '') + '. Touchez un point pour voir la semaine.</p></section>' +
+      '<section class="card"><h2 class="card-title">Dernières séances</h2>' + logHTML(name) + '</section>';
+  }
+  function logHTML(name) {
+    var ex = EX[name];
+    return history(name).filter(function (p) { return p.w !== undefined; }).slice(-3).reverse().map(function (p) {
+      var reps = PRESS_SETS[p.week] && name === 'Presse pectoraux' ? PRESS_SETS[p.week] : [p.r, p.r, Math.max(1, p.r - 1)];
+      return '<div class="log-row"><span class="log-date">' + dayLabel(p.week, ex.day) + '</span><span class="log-sets"><span class="num" style="font-size:18px">' + load(p.w, ex.bw) + '</span> × ' + reps.join(', ') + '</span></div>';
+    }).join('');
+  }
+
+  // ---------- Courbe ----------
+  function drawChart(el, name, metric, selIdx) {
+    var ex = EX[name], pts = history(name);
+    var val = function (p) { if (p.w === undefined) return null; if (ex.bw) return p.r; return metric === 'orm' ? epley(p.w, p.r) : p.w; };
+    var vals = pts.map(val), present = vals.filter(function (v) { return v !== null; });
+    var lo = Math.min.apply(null, present), hi = Math.max.apply(null, present);
+    var step = ex.bw ? 2 : (hi < 30 ? 2.5 : 5);
+    lo = Math.floor((lo - step * 0.5) / step) * step; hi = Math.ceil((hi + step * 0.5) / step) * step;
+    var Wd = 326, H = 196, L = 6, R = 36, T = 12, B = 26;
+    var x = function (i) { return L + i * (Wd - L - R) / (pts.length - 1); };
+    var y = function (v) { return T + (hi - v) / (hi - lo) * (H - T - B); };
+    var svg = '<svg viewBox="0 0 ' + Wd + ' ' + H + '" role="img" aria-label="Courbe sur 12 semaines">';
+    var ticks = [lo, (lo + hi) / 2, hi];
+    ticks.forEach(function (t) {
+      svg += '<line class="grid" x1="' + L + '" x2="' + (Wd - R + 6) + '" y1="' + y(t) + '" y2="' + y(t) + '"/>' +
+        '<text class="axis-lab" x="' + (Wd - R + 10) + '" y="' + (y(t) + 4) + '">' + fmt(Math.round(t * 2) / 2) + '</text>';
+    });
+    [0, 3, 6, 9, 11].forEach(function (i) {
+      svg += '<text class="axis-lab" x="' + x(i) + '" y="' + (H - 6) + '" text-anchor="middle">S' + pts[i].week + '</text>';
+    });
+    // segments séparés par les semaines manquantes
+    var seg = [], segs = [];
+    vals.forEach(function (v, i) { if (v === null) { if (seg.length) segs.push(seg); seg = []; } else seg.push([x(i), y(v)]); });
+    if (seg.length) segs.push(seg);
+    segs.forEach(function (s) {
+      if (s.length > 1) svg += '<path class="line" pathLength="1" d="M' + s.map(function (p) { return p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' L') + '"/>';
+    });
+    var lastIdx = vals.length - 1; while (vals[lastIdx] === null) lastIdx--;
+    if (selIdx === undefined || vals[selIdx] === null) selIdx = lastIdx;
+    svg += '<line class="cross" x1="' + x(selIdx) + '" x2="' + x(selIdx) + '" y1="' + T + '" y2="' + (H - B) + '"/>';
+    vals.forEach(function (v, i) {
+      if (v !== null) svg += '<circle class="dot' + (i === selIdx ? ' sel' : '') + '" cx="' + x(i) + '" cy="' + y(v) + '" r="' + (i === selIdx ? 6 : 4) + '"/>';
+    });
+    var colW = (Wd - L - R) / (pts.length - 1);
+    vals.forEach(function (v, i) {
+      if (v !== null) svg += '<rect class="hit" data-idx="' + i + '" x="' + (x(i) - colW / 2) + '" y="0" width="' + colW + '" height="' + H + '"><title>Semaine ' + pts[i].week + '</title></rect>';
+    });
+    svg += '</svg>';
+    // tableau pour lecteurs d'écran
+    var table = '<table class="sr-only"><tr><th>Semaine</th><th>Valeur</th></tr>' + pts.map(function (p, i) {
+      return '<tr><td>S' + p.week + '</td><td>' + (vals[i] === null ? 'pas de séance' : fmt(vals[i])) + '</td></tr>';
+    }).join('') + '</table>';
+    el.innerHTML = svg + table;
+    el.dataset.metric = metric;
+
+    // chiffre clé = point sélectionné
+    var screen = el.closest('.screen'), p = pts[selIdx], v = vals[selIdx];
+    var unit = ex.bw ? 'reps' : 'kg';
+    screen.querySelector('[data-hero]').innerHTML = fmt(Math.round(v * 10) / 10) + '<small>' + unit + '</small>';
+    var first = vals.filter(function (q) { return q !== null; })[0], diff = Math.round((v - first) * 10) / 10;
+    var what = ex.bw ? 'Meilleure série' : metric === 'orm' ? '1RM estimé' : load(p.w) + ' × ' + p.r;
+    var sub = selIdx === lastIdx
+      ? (diff > 0 ? '<span class="up">+' + fmt(diff) + ' ' + unit + '</span> en 12 semaines' : 'Stable sur 12 semaines')
+      : 'Semaine ' + p.week + ', ' + what;
+    screen.querySelector('[data-hero-sub]').innerHTML = sub;
+  }
+  function animateChart(el) { el.classList.remove('draw'); void el.offsetWidth; el.classList.add('draw'); }
+
+  // ---------- Navigation dans un téléphone ----------
+  var SHELL =
+    '<div class="statusbar" aria-hidden="true"><span>9:41</span><span class="island"></span><span class="sb-icons">' +
+      '<svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>' +
+      '<svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0.5" y="0.5" width="22" height="11" rx="3.5" stroke="currentColor" opacity="0.45"/><rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor"/><rect x="24" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" opacity="0.45"/></svg>' +
+    '</span></div>' +
+    '<div class="stack"></div>' +
+    '<nav class="tabbar" aria-label="Navigation">' +
+      '<button class="tab" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9v6M6.5 6v12M17.5 6v12M21 9v6M6.5 12h11"/></svg>Séance</button>' +
+      '<button class="tab" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 6h14M5 12h14M5 18h9"/></svg>Programmes</button>' +
+      '<button class="tab is-active" type="button" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg>Progression</button>' +
+      '<button class="tab" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>Réglages</button>' +
+    '</nav><span class="home-ind" aria-hidden="true"></span>';
+
+  function makeScreen(html) { var s = document.createElement('div'); s.className = 'screen'; s.innerHTML = html; return s; }
+  function enhance(screen) {
+    // barres : animation de la largeur
+    var fills = screen.querySelectorAll('.bar-fill');
+    requestAnimationFrame(function () { requestAnimationFrame(function () { fills.forEach(function (f) { f.style.width = f.dataset.w + '%'; }); }); });
+    var chart = screen.querySelector('[data-chart]');
+    if (chart) { drawChart(chart, chart.dataset.chart, 'load'); animateChart(chart); }
+  }
+  function push(stack, html, animate) {
+    var s = makeScreen(html), prev = stack.lastElementChild;
+    if (animate) s.classList.add('is-right');
+    stack.appendChild(s); enhance(s);
+    if (prev) prev.classList.add('is-under');
+    if (animate) { void s.offsetWidth; s.classList.remove('is-right'); }
+  }
+  function pop(stack) {
+    var top = stack.lastElementChild, under = top.previousElementSibling;
+    if (!under) return;
+    top.classList.add('is-right'); under.classList.remove('is-under');
+    setTimeout(function () { top.remove(); }, 230);
+  }
+
+  document.querySelectorAll('.phone').forEach(function (phone) {
+    phone.innerHTML = SHELL;
+    var stack = phone.querySelector('.stack'), start = phone.dataset.start;
+    push(stack, bilanHTML(CURRENT_WEEK));
+    if (start !== 'bilan') push(stack, muscleHTML('Pectoraux', CURRENT_WEEK));
+    if (start === 'exercise') push(stack, exerciseHTML('Presse pectoraux', CURRENT_WEEK));
+
+    stack.addEventListener('click', function (e) {
+      var t = e.target.closest('[data-go], [data-metric], .hit');
+      if (!t) return;
+      if (t.classList.contains('hit')) {
+        var chart = t.closest('[data-chart]');
+        drawChart(chart, chart.dataset.chart, chart.dataset.metric, Number(t.dataset.idx));
+        return;
+      }
+      if (t.dataset.metric) {
+        var c = t.closest('.screen').querySelector('[data-chart]');
+        t.parentNode.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b === t); });
+        drawChart(c, c.dataset.chart, t.dataset.metric); animateChart(c);
+        return;
+      }
+      var go = t.dataset.go, week = Number(t.dataset.week);
+      if (go === 'back') pop(stack);
+      else if (go === 'muscle') push(stack, muscleHTML(t.dataset.muscle, week), true);
+      else if (go === 'exercise') push(stack, exerciseHTML(t.dataset.ex, week), true);
+      else if (go === 'week') {
+        var screen = t.closest('.screen'), body = screen.querySelector('.week-body');
+        var dir = week < Number(screen.dataset.week || CURRENT_WEEK) ? 'swap-r' : 'swap-l';
+        body.classList.add(dir);
+        setTimeout(function () {
+          screen.innerHTML = bilanHTML(week); screen.dataset.week = week;
+          var nb = screen.querySelector('.week-body');
+          nb.classList.add(dir === 'swap-l' ? 'swap-r' : 'swap-l'); void nb.offsetWidth;
+          nb.classList.remove('swap-l', 'swap-r');
+          enhance(screen);
+        }, 160);
+      }
+    });
+  });
+
+  // ---------- Thème ----------
+  document.querySelectorAll('[data-theme-btn]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.documentElement.dataset.theme = b.dataset.themeBtn;
+      document.querySelectorAll('[data-theme-btn]').forEach(function (o) { o.setAttribute('aria-pressed', o === b); });
+    });
+  });
+})();
+</script>
+</body>
+</html>
