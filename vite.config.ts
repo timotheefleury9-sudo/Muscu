@@ -31,8 +31,8 @@ export default defineConfig({
         orientation: 'portrait',
         start_url: '/Muscu/',
         scope: '/Muscu/',
-        background_color: '#0e0f12',
-        theme_color: '#0e0f12',
+        background_color: '#121316',
+        theme_color: '#121316',
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
@@ -40,7 +40,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest,json}'],
+        globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest,json,woff2}'],
         navigateFallback: '/Muscu/index.html',
         cleanupOutdatedCaches: true,
       },
