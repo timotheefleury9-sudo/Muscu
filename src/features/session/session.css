@@ -1,0 +1,153 @@
+/* Écran de séance — fidèle à docs/mockups/seance.html, jetons de theme.css.
+   Les animations (repli, coche, glisser, feuille, bandeau) passent par Framer Motion ;
+   seules les transitions de couleur restent en CSS. */
+.session button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.session button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+.session-head { padding: 8px 4px 18px; }
+.session-date { color: var(--text-muted); font-size: 15px; }
+.session-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.session .session-title h1 { font-size: 44px; line-height: 1; margin: 4px 0 0; font-weight: 800; font-stretch: 80%; letter-spacing: -0.02em; }
+.session-count { color: var(--text-muted); font-size: 15px; white-space: nowrap; }
+.session-count strong { color: var(--text); font-weight: 700; }
+.progress { display: flex; gap: 4px; margin-top: 16px; }
+.progress span { flex: 1; height: 4px; border-radius: 2px; background: var(--surface-2); overflow: hidden; }
+.progress span i { display: block; height: 100%; width: 0; background: var(--text); }
+.session-empty { color: var(--text-muted); }
+
+/* Choix d'une autre séance (avant la première série validée) */
+.tpl-switch { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+.session .tpl-switch button {
+  min-height: 44px; padding: 0 16px; border-radius: var(--radius-pill); font-weight: 600; font-size: 15px;
+  color: var(--text-muted); background: var(--surface);
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.session .tpl-switch button[aria-pressed='true'] { background: var(--accent); color: var(--accent-contrast); }
+
+.card { background: var(--surface); border-radius: var(--radius-card); transition: background-color var(--dur) var(--ease); }
+.ex { margin-bottom: 8px; scroll-margin-top: 8px; overflow: hidden; }
+.fold { overflow: hidden; }
+.ex-body { padding: 18px 14px 10px; }
+.ex-name { font-size: 21px; font-weight: 700; margin: 0 4px; line-height: 1.2; }
+.ex-meta { color: var(--text-muted); font-size: 14px; margin: 4px 4px 0; }
+.sets.no-hint { margin-top: 14px; }
+.hint {
+  display: flex; gap: 10px; align-items: flex-start; margin: 14px 0 12px; padding: 12px 14px;
+  border-radius: var(--radius-row); background: var(--surface-2); font-size: 14px; line-height: 1.4; color: var(--text-muted);
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.hint strong { color: var(--text); font-weight: 700; }
+.hint svg { flex: none; margin-top: 1px; }
+.hint.is-up { background: var(--success-soft); color: var(--text); }
+.hint.is-up svg { color: var(--success); }
+.hint.is-warn { background: var(--warning-soft); color: var(--text); }
+.hint.is-warn svg { color: var(--warning); }
+
+/* Ligne de série */
+.sets { display: flex; flex-direction: column; }
+.set-wrap { position: relative; border-radius: var(--radius-row); overflow: hidden; margin-bottom: 6px; }
+.set-del {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; padding-right: 20px;
+  background: var(--surface-2); color: var(--danger); font-weight: 700; font-size: 15px;
+  transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.set-wrap.armed .set-del { background: var(--danger); color: var(--danger-contrast); }
+.set { position: relative; background: var(--surface); border-radius: var(--radius-row); transition: background-color var(--dur) var(--ease); }
+.set.is-open { background: var(--surface-2); }
+.set-head { display: flex; align-items: center; gap: 4px; min-height: 60px; padding: 0 6px 0 4px; touch-action: pan-y; }
+.set-n {
+  width: 30px; height: 30px; flex: none; border-radius: 50%; display: grid; place-items: center;
+  font-size: 14px; font-weight: 700; color: var(--text-muted); border: 1.5px solid var(--border);
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.set.is-done .set-n { color: var(--success); border-color: transparent; }
+.session .set-sum { flex: 1; min-width: 0; min-height: 56px; display: flex; align-items: baseline; gap: 4px; padding: 0 10px; text-align: left; transition: opacity var(--dur) var(--ease); }
+.set-sum .num { font-size: 30px; line-height: 56px; transition: font-size var(--dur) var(--ease); }
+.set-sum .unit { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+.set-sum .x { font-size: 18px; color: var(--faint); margin: 0 6px; }
+.set.is-open .set-sum { opacity: 0.5; }
+.set.is-open .set-sum .num { font-size: 20px; }
+
+/* Coche */
+.check { width: 52px; height: 52px; flex: none; display: grid; place-items: center; border-radius: 50%; }
+.check svg { width: 40px; height: 40px; overflow: visible; }
+.check circle { fill: transparent; stroke: var(--faint); stroke-width: 2; transition: fill var(--dur) var(--ease), stroke var(--dur) var(--ease); }
+.check path { fill: none; stroke: var(--success-contrast); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.set.is-done .check circle { fill: var(--success); stroke: var(--success); }
+
+/* Édition (+/−, saisie) */
+.set-edit { overflow: hidden; }
+.steppers { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding: 0 8px 10px; }
+.stepper { background: var(--surface); border-radius: var(--radius-control); padding: 8px 2px 4px; }
+.stepper-lab { display: block; text-align: center; font-size: 13px; color: var(--text-muted); }
+.stepper-row { display: flex; align-items: center; justify-content: space-between; }
+.session .stepper button {
+  width: 44px; height: 48px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  transition: background-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.session .stepper button:active { background: var(--surface-2); transform: scale(0.92); }
+.stepper button svg { width: 20px; height: 20px; }
+.stepper input {
+  flex: 1; min-width: 0; width: 100%; height: 48px; padding: 0; border: 0; border-radius: 8px;
+  background: transparent; color: var(--text); text-align: center;
+  font-family: inherit; font-size: 30px; line-height: 48px; /* >= 16 px : pas de zoom iOS au focus */
+}
+.stepper input::placeholder { color: var(--faint); }
+.stepper input:focus { outline: none; background: var(--surface-2); }
+
+.ex-actions { display: flex; justify-content: space-between; padding: 2px 0 0; }
+.session .text-btn { min-height: 44px; padding: 0 8px; font-weight: 600; font-size: 15px; color: var(--text); display: inline-flex; align-items: center; gap: 6px; }
+.session .text-btn.muted { color: var(--text-muted); }
+
+/* Exercices suivants / terminés */
+.next-title { font-size: 15px; color: var(--text-muted); margin: 26px 4px 10px; font-weight: 500; }
+.session .ex-next { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; min-height: 68px; text-align: left; border-radius: var(--radius-card); }
+.session .ex-next:active { background: var(--surface-2); }
+.ex-next-name { display: block; font-weight: 600; font-size: 16px; }
+.ex-next-meta { display: block; color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+.ex.is-done .ex-next-name { color: var(--text-muted); }
+.ex-next-load { text-align: right; white-space: nowrap; display: flex; align-items: center; justify-content: flex-end; gap: 2px; }
+.ex-next-load .num { font-size: 24px; }
+.ex-next-load .frac small { font-size: 16px; color: var(--text-muted); font-weight: 600; }
+.ex-next-load .unit { font-size: 13px; color: var(--text-muted); margin-left: 2px; }
+.mini-check { width: 30px; height: 30px; border-radius: 50%; background: var(--success); color: var(--success-contrast); display: inline-grid; place-items: center; margin-left: 10px; }
+.mini-check svg { width: 16px; height: 16px; }
+
+/* Bas d'écran : bouton collant au-dessus de la barre d'onglets */
+.session-footer {
+  position: sticky; bottom: 0; z-index: 2; margin: 0 -16px; padding: 28px 16px 12px;
+  background: linear-gradient(to bottom, transparent, var(--bg) 40%); pointer-events: none;
+}
+.session .primary-btn {
+  pointer-events: auto; width: 100%; min-height: 54px; border-radius: var(--radius-pill);
+  background: var(--accent); color: var(--accent-contrast); font-weight: 700; font-size: 17px;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.session .primary-btn.is-ready { background: var(--success); color: var(--success-contrast); box-shadow: 0 0 0 6px var(--success-soft); }
+
+/* Bandeau (annuler une suppression) */
+.toast {
+  position: fixed; z-index: 15;
+  left: calc(var(--safe-left) + 16px); right: calc(var(--safe-right) + 16px);
+  bottom: calc(var(--tabbar-height) + max(var(--safe-bottom), 8px) + 100px);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px;
+  padding: 6px 6px 6px 18px; border-radius: 16px; background: var(--text); color: var(--bg);
+  font-size: 15px; font-weight: 500;
+}
+.toast button { min-height: 44px; padding: 0 14px; font: inherit; font-weight: 700; color: var(--bg); background: none; border: 0; cursor: pointer; }
+
+/* Feuille de confirmation */
+.scrim { position: fixed; inset: 0; z-index: 20; background: rgba(0, 0, 0, 0.45); }
+.sheet {
+  position: fixed; z-index: 21;
+  left: calc(var(--safe-left) + 8px); right: calc(var(--safe-right) + 8px); bottom: calc(var(--safe-bottom) + 8px);
+  background: var(--surface); border-radius: 32px; padding: 26px 20px 20px;
+}
+.sheet h2 { margin: 0 4px 6px; font-size: 22px; }
+.sheet p { margin: 0 4px 20px; color: var(--text-muted); font-size: 15px; line-height: 1.45; }
+.sheet button { font: inherit; border: 0; cursor: pointer; }
+.sheet .primary-btn {
+  display: block; width: 100%; min-height: 54px; margin-bottom: 8px; border-radius: var(--radius-pill);
+  background: var(--accent); color: var(--accent-contrast); font-weight: 700; font-size: 17px;
+}
+.sheet .secondary-btn { display: block; width: 100%; min-height: 54px; border-radius: var(--radius-pill); background: var(--surface-2); color: var(--text); font-weight: 700; font-size: 17px; }

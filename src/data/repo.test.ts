@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { db } from './db'
 import {
   deleteTemplateExercise, getOpenSession, endSession, listSets, listTemplateExercises,
-  loadAll, saveSet, saveTemplate, saveTemplateExercise, startSession, deleteSet, listTemplates, deleteTemplate,
+  loadAll, saveSet, saveTemplate, saveTemplateExercise, startSession, deleteSet, listTemplates, deleteTemplate, deleteSession,
 } from './repo'
 import type { SetLog, TemplateExercise } from '../domain/types'
 
@@ -54,5 +54,16 @@ describe('repo', () => {
     expect(await listTemplates()).toHaveLength(1)
     await deleteTemplate('t1')
     expect(await listTemplates()).toHaveLength(0)
+  })
+
+  it('supprime une séance et ses séries seulement', async () => {
+    const a = await startSession('t1')
+    const b = await startSession('t1')
+    await saveSet(set(a.id))
+    await saveSet(set(b.id))
+    await deleteSession(a.id)
+    const all = await loadAll()
+    expect(all.sessions.map((s) => s.id)).toEqual([b.id])
+    expect(all.sets.map((s) => s.sessionId)).toEqual([b.id])
   })
 })

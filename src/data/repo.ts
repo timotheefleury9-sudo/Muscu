@@ -30,7 +30,14 @@ export const endSession = async (id: string): Promise<void> => {
   await db.sessions.update(id, { endedAt: new Date().toISOString() })
 }
 
-export const listSets = async (sessionId: string): Promise<SetLog[]> =>
+/** Supprime une séance et ses séries (changement de séance avant toute série validée). */
+export const deleteSession = (id: string): Promise<void> =>
+  db.transaction('rw', db.sessions, db.sets, async () => {
+    await db.sets.where('sessionId').equals(id).delete()
+    await db.sessions.delete(id)
+  })
+
+export const listSets =async (sessionId: string): Promise<SetLog[]> =>
   (await db.sets.where('sessionId').equals(sessionId).toArray()).sort((a, b) => a.setIndex - b.setIndex)
 export const saveSet = async (s: SetLog): Promise<void> => { await db.sets.put(s) }
 export const deleteSet = (id: string): Promise<void> => db.sets.delete(id)
