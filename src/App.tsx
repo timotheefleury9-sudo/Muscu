@@ -14,6 +14,7 @@ const TABS = [
 export default function App() {
   return (
     <div className="app">
+      <div className="topbar" aria-hidden="true" />
       <main className="app-main">
         <Routes>
           <Route path="/" element={<SessionPage />} />

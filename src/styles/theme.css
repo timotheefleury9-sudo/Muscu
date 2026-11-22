@@ -46,12 +46,15 @@ body {
   overscroll-behavior: none;
 }
 
-.app { display: flex; flex-direction: column; height: 100%; }
+.app { position: fixed; inset: 0; display: flex; flex-direction: column; }
+
+/* Barre opaque sous la barre d'état : le contenu défilant ne passe jamais dessous. */
+.topbar { flex: none; height: var(--safe-top); background: var(--bg); }
 
 .app-main {
   flex: 1;
   overflow-y: auto;
-  padding: calc(var(--safe-top) + 16px) calc(var(--safe-right) + 16px) 16px calc(var(--safe-left) + 16px);
+  padding: 16px calc(var(--safe-right) + 16px) 16px calc(var(--safe-left) + 16px);
 }
 
 .page h1 { font-size: 1.75rem; margin: 0 0 16px; }
