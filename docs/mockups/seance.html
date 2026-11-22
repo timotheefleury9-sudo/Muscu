@@ -122,7 +122,14 @@ button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 .progress span i { display: block; height: 100%; width: 0; background: var(--text); transition: width var(--t) var(--ease); }
 
 .card { background: var(--surface); border-radius: var(--r-card); transition: background-color var(--t) var(--ease); }
-.ex-active { padding: 18px 14px 10px; }
+.ex { margin-bottom: 8px; scroll-margin-top: 8px; }
+/* Chaque carte a deux parties repliables : la ligne compacte et le contenu actif */
+.fold { display: grid; grid-template-rows: 1fr; transition: grid-template-rows var(--t) var(--ease), opacity var(--t) var(--ease); }
+.fold > .clip { overflow: hidden; min-height: 0; }
+.ex .fold-body { grid-template-rows: 0fr; opacity: 0; }
+.ex.is-active .fold-row { grid-template-rows: 0fr; opacity: 0; }
+.ex.is-active .fold-body { grid-template-rows: 1fr; opacity: 1; }
+.ex-body { padding: 18px 14px 10px; }
 .ex-name { font-size: 21px; font-weight: 700; margin: 0 4px; line-height: 1.2; }
 .ex-meta { color: var(--muted); font-size: 14px; margin: 4px 4px 0; }
 .hint {
@@ -181,17 +188,17 @@ button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 .set-edit { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--t) var(--ease); }
 .set.is-open .set-edit { grid-template-rows: 1fr; }
 .set-edit > div { overflow: hidden; }
-.steppers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 8px 10px; }
-.stepper { background: var(--surface); border-radius: var(--r-ctl); padding: 8px 4px 4px; }
+.steppers { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding: 0 8px 10px; }
+.stepper { background: var(--surface); border-radius: var(--r-ctl); padding: 8px 2px 4px; }
 .stepper-lab { display: block; text-align: center; font-size: 13px; color: var(--muted); }
 .stepper-row { display: flex; align-items: center; justify-content: space-between; }
 .stepper button {
-  width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  width: 44px; height: 48px; border-radius: 50%; display: grid; place-items: center; flex: none;
   transition: background-color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
 }
 .stepper button:active { background: var(--surface-2); transform: scale(0.92); }
 .stepper button svg { width: 20px; height: 20px; }
-.stepper output { font-size: 36px; line-height: 48px; display: block; text-align: center; min-width: 0; flex: 1; }
+.stepper output { font-size: 30px; line-height: 48px; display: block; text-align: center; min-width: 0; flex: 1; }
 .stepper output.tick-up { animation: tickUp var(--t-fast) var(--ease); }
 .stepper output.tick-down { animation: tickDown var(--t-fast) var(--ease); }
 @keyframes tickUp { from { transform: translateY(6px); opacity: 0.4; } }
@@ -203,7 +210,14 @@ button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
 /* Exercices suivants */
 .next-title { font-size: 15px; color: var(--muted); margin: 26px 4px 10px; font-weight: 500; }
-.ex-next { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; min-height: 68px; margin-bottom: 8px; }
+.ex-next { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; min-height: 68px; text-align: left; border-radius: var(--r-card); }
+.ex-next:active { background: var(--surface-2); }
+.ex-next-load .frac { font-size: 24px; }
+.ex-next-load .frac small { font-size: 16px; color: var(--muted); font-weight: 600; }
+.mini-check { width: 30px; height: 30px; border-radius: 50%; background: var(--success); color: var(--success-ink); display: inline-grid; place-items: center; vertical-align: middle; margin-left: 10px; }
+.mini-check svg { width: 16px; height: 16px; }
+.ex.is-done .ex-next-name { color: var(--muted); }
+.ex.is-done .ex-next-load { display: flex; align-items: center; }
 .ex-next-name { font-weight: 600; font-size: 16px; }
 .ex-next-meta { color: var(--muted); font-size: 13px; margin-top: 2px; }
 .ex-next-load { text-align: right; white-space: nowrap; }
@@ -218,6 +232,8 @@ button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
   transition: transform var(--t-fast) var(--ease), background-color var(--t) var(--ease);
 }
 .primary-btn:active { transform: scale(0.98); }
+.primary-btn.is-ready { background: var(--success); color: var(--success-ink); box-shadow: 0 0 0 6px var(--success-soft); animation: ready 280ms var(--ease); }
+@keyframes ready { 50% { transform: scale(1.04); } }
 .secondary-btn { width: 100%; min-height: 54px; border-radius: 999px; background: var(--surface-2); font-weight: 700; font-size: 17px; }
 
 /* Toast */
@@ -271,7 +287,10 @@ button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
       <li>Touchez une série pour l'ouvrir et corriger le poids (pas de 2 kg pour les haltères) ou les répétitions.</li>
       <li>Glissez une série vers la gauche pour la supprimer. Un bandeau permet d'annuler.</li>
       <li>Validez les 3 séries à 12 répétitions : l'encadré « Prochaine charge » passe au vert.</li>
-      <li>« Terminer la séance » demande une confirmation.</li>
+      <li>Quand la dernière série est validée, l'exercice se replie et le suivant s'ouvre.</li>
+      <li>« Exercice suivant » passe à la suite sans tout valider (exercice partiel ou sauté).</li>
+      <li>Touchez n'importe quel exercice de la liste pour l'ouvrir tout de suite (machine prise, ordre changé).</li>
+      <li>« Terminer la séance » demande une confirmation. Il passe au vert quand tout est fait.</li>
     </ul>
   </section>
 
@@ -289,33 +308,12 @@ button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
         <div class="session-date">Lundi 23 novembre</div>
         <div class="session-title">
           <h1>Push</h1>
-          <span class="session-count"><strong>1</strong> sur 5 exercices</span>
+          <span class="session-count" id="count"></span>
         </div>
         <div class="progress" id="progress" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
       </header>
 
-      <section class="card ex-active" aria-labelledby="ex1">
-        <h2 class="ex-name" id="ex1">Développé couché haltères</h2>
-        <p class="ex-meta">3 séries de 8 à 12 répétitions, repos 2 min</p>
-
-        <div class="hint" id="hint" aria-live="polite">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l4-4 3 3 5-6"/><path d="M11 5h4v4"/></svg>
-          <span id="hint-text"></span>
-        </div>
-
-        <div class="sets" id="sets"></div>
-
-        <div class="ex-actions">
-          <button class="text-btn" type="button" id="add-set">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 3v12M3 9h12"/></svg>
-            Ajouter une série
-          </button>
-          <button class="text-btn muted" type="button">Sauter l'exercice</button>
-        </div>
-      </section>
-
-      <h3 class="next-title">Ensuite</h3>
-      <div id="next"></div>
+      <div id="exlist"></div>
     </main>
 
     <div class="footer"><button class="primary-btn" type="button" id="finish">Terminer la séance</button></div>
@@ -350,32 +348,40 @@ button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
 <script>
 (function () {
-  // ---- Données d'exemple (PPL de Tim) ----
-  var INCREMENT = 2;         // haltères
-  var REPS_MIN = 8, REPS_MAX = 12;
-  var sets = [
-    { id: 1, w: 26, r: 12, done: true },
-    { id: 2, w: 26, r: 11, done: false },
-    { id: 3, w: 26, r: 10, done: false }
+  // ---- Données d'exemple (Push de Tim, pré-rempli avec la séance du lundi 16 novembre) ----
+  var uid = 1;
+  function mk(name, inc, rmin, rmax, rest, w, reps, doneCount) {
+    return {
+      name: name, inc: inc, rmin: rmin, rmax: rmax, rest: rest, planned: 3, openId: 0,
+      sets: reps.map(function (r, i) { return { id: uid++, w: w, r: r, done: i < (doneCount || 0) }; })
+    };
+  }
+  var EXS = [
+    mk('Développé couché haltères', 2, 8, 12, '2 min', 26, [12, 11, 10], 1),
+    mk('Presse pectoraux', 2.5, 8, 12, '2 min', 77.5, [11, 10, 9]),
+    mk('Pec deck', 2.5, 10, 15, '90 s', 45, [14, 13, 12]),
+    mk('Extension triceps poulie', 2.5, 10, 15, '90 s', 27.5, [12, 12, 11]),
+    mk('Élévations latérales poulie', 2.5, 10, 15, '1 min', 7.5, [13, 13, 12])
   ];
-  var openId = 2, nextId = 4, removed = null, toastTimer = null;
-  var NEXT = [
-    { name: 'Presse pectoraux', meta: '3 séries de 8 à 12', w: 77.5 },
-    { name: 'Pec deck', meta: '3 séries de 10 à 15', w: 45 },
-    { name: 'Extension triceps poulie', meta: '3 séries de 10 à 15', w: 27.5 },
-    { name: 'Élévations latérales poulie', meta: '3 séries de 10 à 15', w: 7.5 }
-  ];
+  EXS[0].openId = EXS[0].sets[1].id;
+  var active = 0, removed = null, toastTimer = null, advanceTimer = null;
 
   var fmt = function (n) { return String(n).replace('.', ','); };
   var $ = function (id) { return document.getElementById(id); };
-  var list = $('sets');
+  var listEl = $('exlist');
   var ICON_MINUS = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 10h12"/></svg>';
   var ICON_PLUS = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg>';
+  var ICON_TREND = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l4-4 3 3 5-6"/><path d="M11 5h4v4"/></svg>';
+  var ICON_CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>';
 
-  function rowHTML(s, i) {
+  var doneCount = function (ex) { return ex.sets.filter(function (s) { return s.done; }).length; };
+  var isComplete = function (ex) { return ex.sets.length > 0 && doneCount(ex) === ex.sets.length; };
+
+  // ---- Gabarits ----
+  function setHTML(ex, s, i) {
     return '<div class="set-wrap" data-id="' + s.id + '">' +
       '<div class="set-del" aria-hidden="true">Supprimer</div>' +
-      '<div class="set' + (s.done ? ' is-done' : '') + (s.id === openId ? ' is-open' : '') + '">' +
+      '<div class="set' + (s.done ? ' is-done' : '') + (s.id === ex.openId ? ' is-open' : '') + '">' +
         '<div class="set-head">' +
           '<span class="set-n">' + (i + 1) + '</span>' +
           '<button type="button" class="set-sum" data-act="open" aria-label="Modifier la série">' +
@@ -397,56 +403,142 @@ button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
       '<output class="num" data-out="' + f + '">' + v + '</output>' +
       '<button type="button" data-act="' + f + '+" aria-label="Plus">' + ICON_PLUS + '</button></div></div>';
   }
+  function exHTML(ex, i) {
+    return '<section class="card ex" data-ex="' + i + '">' +
+      '<div class="fold fold-row"><div class="clip">' +
+        '<button type="button" class="ex-next" data-act="activate">' +
+          '<span><span class="ex-next-name" style="display:block">' + ex.name + '</span><span class="ex-next-meta" style="display:block">' + ex.planned + ' séries de ' + ex.rmin + ' à ' + ex.rmax + '</span></span>' +
+          '<span class="ex-next-load" data-load></span>' +
+        '</button>' +
+      '</div></div>' +
+      '<div class="fold fold-body"><div class="clip"><div class="ex-body">' +
+        '<h2 class="ex-name">' + ex.name + '</h2>' +
+        '<p class="ex-meta">' + ex.planned + ' séries de ' + ex.rmin + ' à ' + ex.rmax + ' répétitions, repos ' + ex.rest + '</p>' +
+        '<div class="hint" aria-live="polite">' + ICON_TREND + '<span data-hint></span></div>' +
+        '<div class="sets">' + ex.sets.map(function (s, k) { return setHTML(ex, s, k); }).join('') + '</div>' +
+        '<div class="ex-actions">' +
+          '<button class="text-btn" type="button" data-act="add"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 3v12M3 9h12"/></svg>Ajouter une série</button>' +
+          '<button class="text-btn muted" type="button" data-act="next">Exercice suivant</button>' +
+        '</div>' +
+      '</div></div></div>' +
+    '</section>';
+  }
 
-  function render(enterId) {
-    list.innerHTML = sets.map(rowHTML).join('');
-    if (enterId) { var el = list.querySelector('[data-id="' + enterId + '"]'); if (el) el.classList.add('enter'); }
+  function renderAll() {
+    listEl.innerHTML = EXS.map(exHTML).join('');
     update();
   }
-  function byId(id) { for (var i = 0; i < sets.length; i++) if (sets[i].id === id) return sets[i]; }
-  function wrapOf(id) { return list.querySelector('.set-wrap[data-id="' + id + '"]'); }
+  function renderSets(i, enterId) {
+    var ex = EXS[i], box = cardOf(i).querySelector('.sets');
+    box.innerHTML = ex.sets.map(function (s, k) { return setHTML(ex, s, k); }).join('');
+    if (enterId) { var el = box.querySelector('[data-id="' + enterId + '"]'); if (el) el.classList.add('enter'); }
+    update();
+  }
+  function cardOf(i) { return listEl.querySelector('.ex[data-ex="' + i + '"]'); }
 
   function update() {
-    // numéros, état ouvert
-    list.querySelectorAll('.set-wrap:not(.removing)').forEach(function (w, i) {
-      w.querySelector('.set-n').textContent = i + 1;
-      w.querySelector('.set').classList.toggle('is-open', Number(w.dataset.id) === openId);
+    EXS.forEach(function (ex, i) {
+      var card = cardOf(i), complete = isComplete(ex), n = doneCount(ex);
+      card.classList.toggle('is-active', i === active);
+      card.classList.toggle('is-done', complete && i !== active);
+      card.querySelectorAll('.set-wrap:not(.removing)').forEach(function (w, k) {
+        w.querySelector('.set-n').textContent = k + 1;
+        w.querySelector('.set').classList.toggle('is-open', Number(w.dataset.id) === ex.openId);
+      });
+      // ligne compacte : charge, avancement ou terminé
+      var load = card.querySelector('[data-load]'), w = ex.sets[0] ? ex.sets[0].w : 0;
+      load.innerHTML = complete
+        ? '<span class="num frac">' + n + '<small>/' + ex.sets.length + '</small></span><span class="mini-check" aria-label="Terminé">' + ICON_CHECK + '</span>'
+        : n > 0
+          ? '<span class="num frac">' + n + '<small>/' + ex.sets.length + '</small></span>'
+          : '<span class="num">' + fmt(w) + '</span><span class="unit">kg</span>';
+      // prochaine charge (double progression)
+      var planned = ex.sets.slice(0, ex.planned), ref = w, nextW = fmt(Math.round((ref + ex.inc) * 10) / 10);
+      var allMax = planned.length === ex.planned && planned.every(function (s) { return s.done && s.r >= ex.rmax && s.w >= ref; });
+      var hint = card.querySelector('.hint');
+      hint.classList.toggle('is-up', allMax);
+      card.querySelector('[data-hint]').innerHTML = allMax
+        ? 'Fourchette atteinte. <strong>Prochaine charge : ' + nextW + ' kg</strong> à ' + ex.rmin + ' répétitions.'
+        : '<strong>Prochaine charge : ' + nextW + ' kg</strong> quand les ' + ex.planned + ' séries atteignent ' + ex.rmax + ' répétitions.';
     });
-    // progression de l'exercice en cours
-    var done = sets.filter(function (s) { return s.done; }).length;
-    $('progress').querySelector('i').style.width = (sets.length ? (done / sets.length) * 100 : 0) + '%';
-    // prochaine charge (double progression)
-    var planned = sets.slice(0, 3);
-    var allMax = planned.length === 3 && planned.every(function (s) { return s.done && s.r >= REPS_MAX && s.w >= 26; });
-    var hint = $('hint');
-    hint.classList.toggle('is-up', allMax);
-    $('hint-text').innerHTML = allMax
-      ? 'Fourchette atteinte. <strong>Prochaine charge : 28 kg</strong> à 8 répétitions.'
-      : '<strong>Prochaine charge : 28 kg</strong> quand les 3 séries atteignent 12 répétitions.';
+    // titre « Ensuite » avant la première carte non terminée qui suit l'exercice actif
+    var old = listEl.querySelector('.next-title'); if (old) old.remove();
+    var after = active >= 0 ? EXS.findIndex(function (ex, i) { return i > active && !isComplete(ex); }) : -1;
+    if (after >= 0) { var t = document.createElement('h3'); t.className = 'next-title'; t.textContent = 'Ensuite'; listEl.insertBefore(t, cardOf(after)); }
+    // en-tête et barre de progression
+    $('count').innerHTML = active >= 0
+      ? 'Exercice <strong>' + (active + 1) + '</strong> sur ' + EXS.length
+      : '<strong>' + EXS.filter(isComplete).length + '</strong> sur ' + EXS.length + ' terminés';
+    $('progress').querySelectorAll('i').forEach(function (bar, i) {
+      var ex = EXS[i]; bar.style.width = (ex.sets.length ? doneCount(ex) / ex.sets.length * 100 : 0) + '%';
+    });
+    // bouton Terminer mis en avant quand il ne reste rien
+    var ready = active < 0 || EXS.every(isComplete);
+    var fin = $('finish');
+    if (ready !== fin.classList.contains('is-ready')) fin.classList.toggle('is-ready', ready);
+  }
+
+  // ---- Changer d'exercice ----
+  function activate(i) {
+    clearTimeout(advanceTimer);
+    active = i;
+    if (i >= 0) {
+      var ex = EXS[i];
+      if (!ex.openId || !ex.sets.some(function (s) { return s.id === ex.openId; })) {
+        var first = ex.sets.filter(function (s) { return !s.done; })[0];
+        ex.openId = first ? first.id : 0;
+      }
+    }
+    update();
+    if (i >= 0) setTimeout(function () {
+      // défile seulement la zone de contenu du téléphone, pas la page
+      var sc = listEl.closest('.scroll'), card = cardOf(i);
+      sc.scrollTo({ top: card.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop - 8, behavior: 'smooth' });
+    }, 240);
+  }
+  function nextIndex(from) {
+    for (var k = 1; k <= EXS.length; k++) {
+      var j = (from + k) % EXS.length;
+      if (j !== from && !isComplete(EXS[j])) return j;
+    }
+    return -1;
   }
 
   // ---- Taps ----
   var suppressClick = 0;
-  list.addEventListener('click', function (e) {
+  listEl.addEventListener('click', function (e) {
     if (Date.now() < suppressClick) return;
     var btn = e.target.closest('[data-act]'); if (!btn) return;
-    var wrap = btn.closest('.set-wrap'); var id = Number(wrap.dataset.id); var s = byId(id);
-    var act = btn.dataset.act;
-    if (act === 'open') { openId = openId === id ? 0 : id; update(); return; }
+    var card = btn.closest('.ex'), i = Number(card.dataset.ex), ex = EXS[i], act = btn.dataset.act;
+    if (act === 'activate') { activate(i); return; }
+    if (act === 'next') { activate(nextIndex(i)); return; }
+    if (act === 'add') {
+      var last = ex.sets[ex.sets.length - 1] || { w: 0, r: ex.rmin };
+      var ns = { id: uid++, w: last.w, r: last.r, done: false };
+      ex.sets.push(ns); ex.openId = ns.id; renderSets(i, ns.id); return;
+    }
+    var wrap = btn.closest('.set-wrap'); var id = Number(wrap.dataset.id);
+    var s = ex.sets.filter(function (x) { return x.id === id; })[0];
+    if (act === 'open') { ex.openId = ex.openId === id ? 0 : id; update(); return; }
     if (act === 'check') {
       s.done = !s.done;
-      var row = wrap.querySelector('.set');
-      row.classList.toggle('is-done', s.done);
+      wrap.querySelector('.set').classList.toggle('is-done', s.done);
       btn.setAttribute('aria-pressed', s.done);
       btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop');
-      if (s.done && openId === id) {
-        var nxt = sets.filter(function (x) { return !x.done; })[0];
-        openId = nxt ? nxt.id : 0;
+      if (s.done && ex.openId === id) {
+        var nxt = ex.sets.filter(function (x) { return !x.done; })[0];
+        ex.openId = nxt ? nxt.id : 0;
       }
-      update(); return;
+      update();
+      // dernière série validée : on laisse voir la coche, puis on enchaîne
+      clearTimeout(advanceTimer);
+      if (s.done && isComplete(ex) && i === active) {
+        advanceTimer = setTimeout(function () { if (active === i && isComplete(ex)) activate(nextIndex(i)); }, 420);
+      }
+      return;
     }
     var f = act[0], dir = act[1] === '+' ? 1 : -1;
-    if (f === 'w') s.w = Math.max(0, Math.round((s.w + dir * INCREMENT) * 10) / 10);
+    if (f === 'w') s.w = Math.max(0, Math.round((s.w + dir * ex.inc) * 10) / 10);
     else s.r = Math.max(0, s.r + dir);
     var out = wrap.querySelector('[data-out="' + f + '"]');
     out.textContent = f === 'w' ? fmt(s.w) : s.r;
@@ -458,7 +550,7 @@ button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
   // ---- Glisser pour supprimer ----
   var drag = null, THRESHOLD = 110;
-  list.addEventListener('pointerdown', function (e) {
+  listEl.addEventListener('pointerdown', function (e) {
     var row = e.target.closest('.set');
     if (!row || e.target.closest('.stepper button, .check')) return;
     drag = { row: row, wrap: row.parentNode, x0: e.clientX, y0: e.clientY, dx: 0, active: false, pid: e.pointerId };
@@ -482,23 +574,23 @@ button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
     if (!d.active) return;
     suppressClick = Date.now() + 300;
     d.row.classList.remove('dragging');
-    if (d.dx < -THRESHOLD) removeSet(Number(d.wrap.dataset.id), d);
+    if (d.dx < -THRESHOLD) removeSet(Number(d.wrap.closest('.ex').dataset.ex), Number(d.wrap.dataset.id), d);
     else { d.row.style.transform = ''; d.wrap.classList.remove('armed'); }
   }
   window.addEventListener('pointerup', endDrag);
   window.addEventListener('pointercancel', endDrag);
 
-  function removeSet(id, d) {
-    var wrap = d.wrap;
+  function removeSet(i, id, d) {
+    var ex = EXS[i], wrap = d.wrap;
     d.row.style.transform = 'translateX(-100%)';
     wrap.style.height = wrap.offsetHeight + 'px';
     void wrap.offsetHeight;
     wrap.classList.add('removing');
     wrap.style.height = '0px';
-    var idx = sets.findIndex(function (s) { return s.id === id; });
-    removed = { set: sets[idx], index: idx };
-    sets.splice(idx, 1);
-    if (openId === id) openId = 0;
+    var idx = ex.sets.findIndex(function (s) { return s.id === id; });
+    removed = { ex: i, set: ex.sets[idx], index: idx };
+    ex.sets.splice(idx, 1);
+    if (ex.openId === id) ex.openId = 0;
     setTimeout(function () { wrap.remove(); update(); }, 230);
     showToast('Série supprimée');
   }
@@ -510,27 +602,16 @@ button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
   }
   $('undo').addEventListener('click', function () {
     if (!removed) return;
-    sets.splice(removed.index, 0, removed.set);
-    var id = removed.set.id; removed = null;
+    EXS[removed.ex].sets.splice(removed.index, 0, removed.set);
+    var r = removed; removed = null;
     $('toast').classList.remove('show');
-    render(id);
+    renderSets(r.ex, r.set.id);
   });
-  $('add-set').addEventListener('click', function () {
-    var last = sets[sets.length - 1] || { w: 26, r: REPS_MIN };
-    var s = { id: nextId++, w: last.w, r: last.r, done: false };
-    sets.push(s); openId = s.id; render(s.id);
-  });
-
-  // ---- Exercices suivants ----
-  $('next').innerHTML = NEXT.map(function (x) {
-    return '<div class="card ex-next"><div><div class="ex-next-name">' + x.name + '</div><div class="ex-next-meta">' + x.meta + '</div></div>' +
-      '<div class="ex-next-load"><span class="num">' + fmt(x.w) + '</span><span class="unit">kg</span></div></div>';
-  }).join('');
 
   // ---- Terminer ----
   var phone = $('phone');
   $('finish').addEventListener('click', function () {
-    var left = sets.filter(function (s) { return !s.done; }).length + NEXT.length * 3;
+    var left = EXS.reduce(function (n, ex) { return n + ex.sets.length - doneCount(ex); }, 0);
     $('sheet-text').textContent = left
       ? left + ' séries non validées seront ignorées. Elles ne comptent ni dans le bilan ni dans la prochaine charge.'
       : 'Toutes les séries sont validées.';
@@ -550,7 +631,7 @@ button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
     });
   });
 
-  render();
+  renderAll();
 })();
 </script>
 </body>
