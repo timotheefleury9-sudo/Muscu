@@ -2,10 +2,22 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { execSync } from 'node:child_process'
+
+function buildId() {
+  const ts = new Date().toISOString()
+  try {
+    const sha = execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
+    return `${sha} ${ts}`
+  } catch {
+    return ts
+  }
+}
 
 // Dépôt GitHub : timotheefleury9-sudo/Muscu → publié sur /Muscu/ (chemins sensibles à la casse)
 export default defineConfig({
   base: '/Muscu/',
+  define: { __BUILD_ID__: JSON.stringify(buildId()) },
   plugins: [
     react(),
     VitePWA({

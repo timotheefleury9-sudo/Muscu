@@ -80,3 +80,12 @@ body {
 }
 
 .tab.active { color: var(--accent); }
+
+.diagnostic h2 { font-size: 1rem; margin: 24px 0 8px; }
+.diagnostic-toggle { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.diagnostic-values, .build-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+}
