@@ -46,7 +46,19 @@ body {
   overscroll-behavior: none;
 }
 
-.app { position: fixed; inset: 0; display: flex; flex-direction: column; }
+/* WebKit bug 237961 : en mode standalone + viewport-fit=cover, `inset: 0`, `height: 100%`
+   et -webkit-fill-available laissent un vide en bas (hauteur de la barre d'état).
+   100vh / 100lvh couvrent l'écran réel avec black-translucent (cf. WebKit 316008). */
+.app {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  height: 100lvh;
+  display: flex;
+  flex-direction: column;
+}
 
 /* Barre opaque sous la barre d'état : le contenu défilant ne passe jamais dessous. */
 .topbar { flex: none; height: var(--safe-top); background: var(--bg); }
