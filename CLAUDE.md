@@ -9,7 +9,7 @@ PWA iPhone (Safari et Chrome) de suivi d'entraînement de musculation. Interface
 
 Vite, React 18, TypeScript strict, vite-plugin-pwa (autoUpdate), Dexie (+ dexie-react-hooks), React Router, Framer Motion, Recharts, Vitest + Testing Library + fake-indexeddb. Gestionnaire : `npm`.
 
-Commandes : `npm run dev`, `npx vitest run`, `npm run build`, `npm run icons` (régénère les icônes de substitution).
+Commandes : `npm run dev`, `npm test`, `npm run build`, `npm run icons` (régénère les icônes de substitution).
 
 ## Découpage
 
@@ -22,7 +22,7 @@ Commandes : `npm run dev`, `npx vitest run`, `npm run build`, `npm run icons` (r
 
 ## Déploiement
 
-GitHub Pages via `.github/workflows/deploy.yml` (push sur `main`). Dépôt `timotheefleury9-sudo/muscu` → Vite `base: '/muscu/'`, Router avec `basename` = `import.meta.env.BASE_URL`. `404.html` = copie de `index.html` pour les liens profonds.
+GitHub Pages via `.github/workflows/deploy.yml` (push sur `main`). Dépôt `timotheefleury9-sudo/Muscu` → Vite `base: '/Muscu/'`, Router avec `basename` = `import.meta.env.BASE_URL`. `404.html` = copie de `index.html` pour les liens profonds.
 
 ## Contraintes
 

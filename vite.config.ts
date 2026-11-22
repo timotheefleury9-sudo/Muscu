@@ -3,9 +3,9 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// Dépôt GitHub : timotheefleury9-sudo/muscu → publié sur /muscu/
+// Dépôt GitHub : timotheefleury9-sudo/Muscu → publié sur /Muscu/ (chemins sensibles à la casse)
 export default defineConfig({
-  base: '/muscu/',
+  base: '/Muscu/',
   plugins: [
     react(),
     VitePWA({
@@ -17,8 +17,8 @@ export default defineConfig({
         lang: 'fr',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/muscu/',
-        scope: '/muscu/',
+        start_url: '/Muscu/',
+        scope: '/Muscu/',
         background_color: '#0e0f12',
         theme_color: '#0e0f12',
         icons: [
@@ -29,7 +29,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest,json}'],
-        navigateFallback: '/muscu/index.html',
+        navigateFallback: '/Muscu/index.html',
         cleanupOutdatedCaches: true,
       },
     }),
