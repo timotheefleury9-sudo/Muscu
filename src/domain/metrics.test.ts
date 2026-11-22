@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { AppData, Exercise, SetLog, Session } from './types'
-import { e1rm, isBetter, weeklySummary, exerciseSeries } from './metrics'
+import { e1rm, isBetter, weeklySummary, exerciseSeries, exerciseHighlights } from './metrics'
 
 const ex = (id: string, primaryGroup: Exercise['primaryGroup'], bodyweight = false): Exercise => ({
   id, name: id, primaryGroup, secondaryGroups: ['triceps'], equipment: 'x', kind: 'compound', increment: 2.5, bodyweight, custom: false,
@@ -104,5 +104,37 @@ describe('exerciseSeries', () => {
     const d = base([sess('a', W1), sess('b', W2)], [set('a', 'pompes', 0, 20), set('a', 'pompes', 0, 25), set('b', 'pompes', 10, 12)])
     const s = exerciseSeries(d, 'pompes', 2, '2026-11-09')
     expect(s.map(p => p.value)).toEqual([25, 14])
+  })
+})
+
+describe('exerciseHighlights', () => {
+  const data = base(
+    [sess('a', W1), sess('b', W2), sess('c', W3)],
+    [
+      set('a', 'dev', 80, 10), set('a', 'dev', 80, 8),
+      set('b', 'dev', 82.5, 8), set('b', 'dev', 77.5, 9),
+      set('c', 'dev', 85, 8), set('c', 'dev', 60, 5, false),
+      set('a', 'pompes', 0, 12), set('b', 'pompes', 0, 14),
+    ],
+  )
+  it('record = meilleure série jusqu\'à la semaine donnée ; dernière = meilleure de la dernière semaine', () => {
+    expect(exerciseHighlights(data, 'dev', '2026-11-09')).toEqual({
+      record: { weight: 80, reps: 10 },
+      last: { weekStart: '2026-11-09', best: { weight: 82.5, reps: 8 } },
+    })
+    expect(exerciseHighlights(data, 'dev', '2026-11-16')).toEqual({
+      record: { weight: 85, reps: 8 },
+      last: { weekStart: '2026-11-16', best: { weight: 85, reps: 8 } },
+    })
+  })
+  it('poids du corps : reps', () => {
+    expect(exerciseHighlights(data, 'pompes', '2026-11-16')).toEqual({
+      record: { weight: 0, reps: 14 },
+      last: { weekStart: '2026-11-09', best: { weight: 0, reps: 14 } },
+    })
+  })
+  it('aucune série validée => null', () => {
+    expect(exerciseHighlights(data, 'squat', '2026-11-16')).toBeNull()
+    expect(exerciseHighlights(data, 'dev', '2026-10-26')).toBeNull()
   })
 })

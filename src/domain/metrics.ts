@@ -138,3 +138,20 @@ export function exerciseSeries(
     return { weekStart: week, value }
   })
 }
+
+export interface ExerciseHighlights {
+  record: PerformedSet
+  last: { weekStart: string; best: PerformedSet }
+}
+
+/** Record (meilleure série) et meilleure série de la dernière semaine travaillée, jusqu'à endWeek inclus. */
+export function exerciseHighlights(data: AppData, exerciseId: string, endWeek: string): ExerciseHighlights | null {
+  const ex = data.exercises.find(e => e.id === exerciseId)
+  const weeks = weeksOf(data, exerciseId).filter(w => w.week <= endWeek)
+  if (!ex || weeks.length === 0) return null
+  const lastWeek = weeks[weeks.length - 1]
+  return {
+    record: bestOf(weeks.flatMap(w => w.sets), ex.bodyweight),
+    last: { weekStart: lastWeek.week, best: bestOf(lastWeek.sets, ex.bodyweight) },
+  }
+}

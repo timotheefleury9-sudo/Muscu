@@ -2,6 +2,8 @@ import { NavLink, Route, Routes } from 'react-router-dom'
 import SessionPage from './features/session/SessionPage'
 import ProgramsPage from './features/programs/ProgramsPage'
 import WeekSummaryPage from './features/progress/WeekSummaryPage'
+import MuscleDetailPage from './features/progress/MuscleDetailPage'
+import ExerciseChartPage from './features/progress/ExerciseChartPage'
 import SettingsPage from './features/settings/SettingsPage'
 
 const TABS = [
@@ -30,6 +32,8 @@ export default function App() {
           <Route path="/" element={<SessionPage />} />
           <Route path="/programmes" element={<ProgramsPage />} />
           <Route path="/progression" element={<WeekSummaryPage />} />
+          <Route path="/progression/muscle/:group" element={<MuscleDetailPage />} />
+          <Route path="/progression/exercice/:id" element={<ExerciseChartPage />} />
           <Route path="/reglages" element={<SettingsPage />} />
           <Route path="*" element={<SessionPage />} />
         </Routes>

@@ -1,0 +1,78 @@
+/* Progression — fidèle à docs/mockups/bilan.html, jetons de theme.css.
+   Déplacements et largeurs animés par Framer Motion ; seules les couleurs restent en CSS. */
+.prog button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+.prog button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.prog .p-card { background: var(--surface); border-radius: var(--radius-card); padding: 16px; transition: background-color var(--dur) var(--ease); }
+.prog .p-card + .p-card { margin-top: 12px; }
+.prog .p-card-title { font-size: 17px; font-weight: 700; margin: 2px 2px 10px; }
+.prog .p-title { font-size: 34px; font-weight: 800; font-stretch: 85%; letter-spacing: -0.02em; margin: 8px 4px 14px; line-height: 1.05; }
+.prog .p-back { min-height: 44px; display: inline-flex; align-items: center; gap: 2px; padding: 0 10px 0 0; font-weight: 600; font-size: 16px; color: var(--text-muted); }
+.prog .p-back svg { width: 22px; height: 22px; }
+.p-chev { width: 16px; height: 16px; color: var(--faint); flex: none; }
+
+.delta { display: inline-flex; align-items: center; gap: 4px; padding: 0 10px; height: 28px; border-radius: var(--radius-pill); font-size: 14px; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.delta svg { width: 12px; height: 12px; }
+.delta-up { background: var(--success-soft); color: var(--success); }
+.delta-eq, .delta-new { background: var(--surface-2); color: var(--text-muted); }
+.delta-eq { min-width: 40px; justify-content: center; }
+.delta-stall { background: var(--warning-soft); color: var(--warning); }
+.p-tag { display: inline-block; font-size: 12px; font-weight: 600; color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; margin-left: 6px; vertical-align: 1px; }
+
+/* Bilan */
+.p-week-nav { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border-radius: var(--radius-pill); padding: 4px; margin-bottom: 12px; transition: background-color var(--dur) var(--ease); }
+.prog .p-week-nav button, .p-week-nav .p-week-gap { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.prog .p-week-nav button { transition: background-color var(--dur-fast) var(--ease); }
+.prog .p-week-nav button:active { background: var(--surface-2); }
+.p-week-nav svg { width: 22px; height: 22px; }
+.p-week-label { text-align: center; }
+.p-week-label strong { display: block; font-size: 17px; }
+.p-week-label span { font-size: 13px; color: var(--text-muted); }
+
+.p-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.prog .p-kpis .p-card { margin: 0; padding: 16px 16px 14px; min-height: 148px; display: flex; flex-direction: column; }
+.p-kpi-lab { font-size: 15px; color: var(--text-muted); }
+.p-kpi-val { font-size: 64px; line-height: 1; margin-top: 10px; }
+.p-kpi-val small { font-size: 30px; color: var(--faint); font-weight: 600; margin-left: 2px; }
+.p-pips { display: flex; gap: 4px; margin-top: auto; }
+.p-pips span { flex: 1; height: 6px; border-radius: 3px; background: var(--surface-2); transition: background-color var(--dur) var(--ease); }
+.p-pips span.on { background: var(--text); }
+.p-kpi-sub { margin-top: auto; font-size: 13px; color: var(--text-muted); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.p-bars { display: flex; flex-direction: column; }
+.prog .p-bar-row { display: grid; grid-template-columns: 96px 1fr 28px 16px; align-items: center; gap: 10px; min-height: 44px; border-radius: 10px; padding: 0 2px; transition: background-color var(--dur-fast) var(--ease); }
+.prog .p-bar-row:active { background: var(--surface-2); }
+.p-bar-name { font-size: 15px; font-weight: 500; }
+.p-bar-track { display: block; height: 8px; }
+.p-bar-fill { display: block; height: 8px; border-radius: 4px; background: var(--text); }
+.p-bar-count { font-size: 20px; text-align: right; }
+.p-bars-empty { font-size: 13px; color: var(--text-muted); margin: 8px 2px 2px; line-height: 1.4; }
+
+.prog .p-ex-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 60px; padding: 8px 2px; border-top: 1px solid var(--border); }
+.prog .p-ex-row:first-of-type { border-top: 0; }
+.p-ex-main { flex: 1; min-width: 0; }
+.p-ex-name { display: block; font-size: 15px; font-weight: 600; line-height: 1.25; }
+.p-ex-sub { display: block; font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+.p-empty { padding: 20px 18px; }
+.p-empty strong { display: block; font-size: 17px; margin-bottom: 4px; }
+.p-empty p { margin: 0; color: var(--text-muted); font-size: 15px; line-height: 1.4; }
+
+/* Détail muscle et exercice */
+.p-hero { margin: 0 4px 16px; }
+.p-hero-val { font-size: 72px; line-height: 0.95; }
+.p-hero-val small { font-size: 24px; font-weight: 600; color: var(--text-muted); margin-left: 6px; font-stretch: 100%; }
+.p-hero-sub { font-size: 15px; color: var(--text-muted); margin-top: 6px; }
+.p-hero-sub .up { color: var(--success); font-weight: 600; }
+
+.p-chart-label { font-size: 13px; color: var(--text-muted); margin: 0 2px 8px; }
+.p-chart { height: 196px; }
+.p-chart .recharts-surface { overflow: visible; }
+.p-chart .recharts-wrapper, .p-chart svg { outline: none; }
+.p-chart-note { font-size: 13px; color: var(--text-muted); margin: 10px 2px 0; }
+.p-fact { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; min-height: 48px; padding: 10px 2px; border-top: 1px solid var(--border); }
+.p-fact:first-of-type { border-top: 0; }
+.p-fact-lab { font-size: 15px; color: var(--text-muted); }
+.p-fact-lab small { display: block; font-size: 13px; color: var(--faint); margin-top: 2px; }
+.p-fact-val { font-size: 15px; font-weight: 600; text-align: right; }
