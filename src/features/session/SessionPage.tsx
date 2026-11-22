@@ -40,6 +40,11 @@ export default function SessionPage() {
     if (sheetOpen) sheetOk.current?.focus()
   }, [sheetOpen])
 
+  // Séance rechargée (resynchronisation, fin, changement) : une suppression n'est plus annulable.
+  useEffect(() => {
+    setToast((t) => (t?.undo ? null : t))
+  }, [state.version])
+
   if (state.status === 'loading') return <section className="page session" aria-busy="true" />
   if (state.status === 'empty' || !state.template) {
     return (

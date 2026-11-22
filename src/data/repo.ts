@@ -26,6 +26,14 @@ export async function startSession(templateId: string): Promise<Session> {
   await db.sessions.add(s)
   return s
 }
+/** Crée la séance et ses séries dans une seule transaction : en cas d'échec, rien n'est écrit. */
+export const startSessionWithSets = (templateId: string, sets: SetLog[]): Promise<Session> =>
+  db.transaction('rw', db.sessions, db.sets, async () => {
+    const s: Session = { id: crypto.randomUUID(), templateId, startedAt: new Date().toISOString(), endedAt: null }
+    await db.sessions.add(s)
+    for (const x of sets) await saveSet({ ...x, sessionId: s.id })
+    return s
+  })
 export const endSession = async (id: string): Promise<void> => {
   await db.sessions.update(id, { endedAt: new Date().toISOString() })
 }

@@ -190,6 +190,10 @@ describe('SessionPage', () => {
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Valider la série 1', pressed: true })).not.toBeInTheDocument())
     expect(await doneSets()).toHaveLength(7)
     expect(error).toHaveBeenCalled()
+    // Rien de partiel en base : pas de séance ouverte vide, et les séries proposées sont toujours là.
+    expect(await openSession()).toBeUndefined()
+    const card = screen.getByRole('region', { name: 'Développé couché haltères' })
+    expect(within(card).getAllByRole('button', { name: /^Série \d : 26 kg × 1[012] répétitions/ })).toHaveLength(3)
     // Le message reste jusqu'à ce qu'on le ferme.
     await new Promise((r) => setTimeout(r, 50))
     expect(screen.getByRole('alert')).toBeInTheDocument()

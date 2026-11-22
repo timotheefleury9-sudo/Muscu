@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from './db'
 import {
   deleteTemplateExercise, getOpenSession, endSession, listSets, listTemplateExercises,
-  loadAll, saveSet, saveTemplate, saveTemplateExercise, startSession, deleteSet, listTemplates, deleteTemplate, deleteSession,
+  loadAll, saveSet, saveTemplate, saveTemplateExercise, startSession, deleteSet, listTemplates, deleteTemplate, deleteSession, startSessionWithSets,
 } from './repo'
 import type { SetLog, TemplateExercise } from '../domain/types'
 
@@ -65,5 +65,18 @@ describe('repo', () => {
     const all = await loadAll()
     expect(all.sessions.map((s) => s.id)).toEqual([b.id])
     expect(all.sets.map((s) => s.sessionId)).toEqual([b.id])
+  })
+
+  it('startSessionWithSets crée la séance et ses séries ensemble, ou rien', async () => {
+    const s = await startSessionWithSets('t1', [set('', { setIndex: 0 }), set('', { setIndex: 1 })])
+    expect(await getOpenSession()).toEqual(s)
+    expect((await listSets(s.id)).map((x) => x.sessionId)).toEqual([s.id, s.id])
+    await endSession(s.id)
+
+    const put = vi.spyOn(db.sets, 'put').mockRejectedValueOnce(new Error('quota'))
+    await expect(startSessionWithSets('t1', [set('')])).rejects.toThrow('quota')
+    put.mockRestore()
+    expect(await getOpenSession()).toBeUndefined()
+    expect((await loadAll()).sessions).toHaveLength(1)
   })
 })

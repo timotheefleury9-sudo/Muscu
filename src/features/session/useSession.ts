@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { deleteSession, deleteSet, endSession, loadAll, saveSet, startSession } from '../../data/repo'
+import { deleteSession, deleteSet, endSession, loadAll, saveSet, startSessionWithSets } from '../../data/repo'
 import { buildHistory } from '../../domain/history'
 import { suggestNext, type Suggestion } from '../../domain/progression'
 import { nextTemplateId, resolveOpenSession } from '../../domain/rotation'
@@ -134,15 +134,14 @@ export function useSession() {
   const ensureSession = useCallback(async (myGen: number): Promise<string> => {
     const cur = stateRef.current
     if (cur.session) return cur.session.id
-    const s = await startSession(cur.template!.id)
+    // Séance et séries proposées écrites ensemble : un échec ne laisse jamais de séance ouverte vide.
+    const s = await startSessionWithSets(cur.template!.id, stateRef.current.items.flatMap((i) => i.sets))
     if (myGen !== gen.current) {
       // Séance changée pendant la création : on n'en garde pas de trace.
       await deleteSession(s.id)
       throw new StaleWrite()
     }
-    const latest = stateRef.current
-    commit({ ...latest, session: s })
-    await Promise.all(latest.items.flatMap((i) => i.sets).map((x) => saveSet({ ...x, sessionId: s.id })))
+    commit({ ...stateRef.current, session: s })
     return s.id
   }, [commit])
 

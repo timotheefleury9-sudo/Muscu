@@ -38,15 +38,15 @@ describe('useSession', () => {
     const { result } = renderHook(() => useSession())
     await waitFor(() => expect(result.current.state.status).toBe('ready'))
     const set = result.current.state.items[0].sets[0]
-    // startSession reste en cours jusqu'à ce qu'on le libère.
-    const realAdd = db.sessions.add.bind(db.sessions)
+    // La création de la séance (transaction) reste en attente jusqu'à ce qu'on la libère.
+    const realTransaction = db.transaction.bind(db) as (...a: unknown[]) => Promise<unknown>
     let release!: () => void
     const gate = new Promise<void>((r) => { release = r })
     let calls = 0
-    const add = vi.spyOn(db.sessions, 'add').mockImplementation(((...args: Parameters<typeof realAdd>) => {
+    const add = vi.spyOn(db, 'transaction').mockImplementation(((...args: unknown[]) => {
       calls++
-      return gate.then(() => realAdd(...args))
-    }) as typeof db.sessions.add)
+      return gate.then(() => realTransaction(...args))
+    }) as unknown as typeof db.transaction)
     act(() => { result.current.updateSet(0, set.id, { weight: 20 }) })
     await waitFor(() => expect(calls).toBe(1))
     act(() => { result.current.selectTemplate('tpl-legs') })
