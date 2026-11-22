@@ -1,10 +1,18 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../data/db'
 import { seedIfEmpty } from '../../data/seed'
 import { endSession, saveSet, startSession } from '../../data/repo'
 import SessionPage from './SessionPage'
+import { pendingWrites } from './useSession'
+
+afterEach(async () => {
+  // Démonte puis laisse finir les écritures en file avant que le test suivant ne vide la base.
+  cleanup()
+  await pendingWrites()
+  vi.restoreAllMocks()
+})
 
 beforeEach(async () => {
   await db.delete()
@@ -168,5 +176,37 @@ describe('SessionPage', () => {
     render(<SessionPage />)
     expect(await screen.findByRole('heading', { level: 1, name: 'Push' })).toBeInTheDocument()
     expect((await db.sessions.get(s.id))?.endedAt).not.toBeNull()
+  })
+
+  it('un échec d’enregistrement affiche un message persistant et resynchronise depuis la base', async () => {
+    await withHistory()
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.spyOn(db.sets, 'put').mockRejectedValue(new DOMException('Quota dépassé', 'QuotaExceededError'))
+    render(<SessionPage />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Valider la série 1' }))
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent("Enregistrement impossible — tes dernières saisies n'ont pas été sauvegardées")
+    // L'écran reflète la base : la série n'apparaît pas validée.
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Valider la série 1', pressed: true })).not.toBeInTheDocument())
+    expect(await doneSets()).toHaveLength(7)
+    expect(error).toHaveBeenCalled()
+    // Le message reste jusqu'à ce qu'on le ferme.
+    await new Promise((r) => setTimeout(r, 50))
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+    await userEvent.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Fermer' }))
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
+  })
+
+  it('« Séance enregistrée » n’est pas annoncé si la clôture échoue', async () => {
+    await withHistory()
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    render(<SessionPage />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Valider la série 1' }))
+    await waitFor(async () => expect(await openSession()).toBeDefined())
+    vi.spyOn(db.sessions, 'update').mockRejectedValue(new Error('échec'))
+    await userEvent.click(screen.getByRole('button', { name: 'Terminer la séance' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Terminer' }))
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(screen.queryByText('Séance enregistrée')).not.toBeInTheDocument()
   })
 })

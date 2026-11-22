@@ -17,11 +17,24 @@ export interface SessionState {
   items: SessionItem[]
   /** Change à chaque (re)chargement ou changement de séance. */
   version: number
+  /** Une écriture a échoué : l'écran a été resynchronisé depuis la base. Reste vrai jusqu'à fermeture du message. */
+  saveError: boolean
 }
 
-export interface RemovedSet { itemIndex: number; set: SetLog }
+/** Série supprimée, restaurable seulement dans la même séance chargée (même version). */
+export interface RemovedSet { version: number; itemIndex: number; set: SetLog }
 
-const LOADING: SessionState = { status: 'loading', templates: [], template: null, session: null, items: [], version: 0 }
+const LOADING: SessionState = { status: 'loading', templates: [], template: null, session: null, items: [], version: 0, saveError: false }
+
+/** Écriture devenue sans objet (séance changée pendant qu'elle s'exécutait). */
+class StaleWrite extends Error {}
+
+/** Écritures en cours, toutes instances confondues (y compris après démontage). */
+const inFlight = new Set<Promise<unknown>>()
+/** Attend la fin de toutes les écritures en cours (tests, diagnostic). */
+export async function pendingWrites(): Promise<void> {
+  while (inFlight.size > 0) await Promise.allSettled([...inFlight])
+}
 
 /** Exercices de la séance : séries de la séance ouverte, ou séries proposées (brouillon) depuis l'historique. */
 function buildItems(data: AppData, templateId: string, session: Session | null): SessionItem[] {
@@ -50,20 +63,42 @@ export function useSession() {
   const dataRef = useRef<AppData | null>(null)
   const queue = useRef<Promise<void>>(Promise.resolve())
   const gen = useRef(0)
+  const resyncRef = useRef<() => Promise<void>>(async () => {})
 
   const commit = useCallback((next: SessionState) => {
     stateRef.current = next
     setState(next)
   }, [])
 
-  /** Écritures en base dans l'ordre des actions, sans jamais bloquer l'interface. */
-  const enqueue = useCallback((job: () => Promise<void>) => {
+  /**
+   * Écritures en base dans l'ordre des actions, sans jamais bloquer l'interface.
+   * En cas d'échec : message persistant et resynchronisation depuis la base (l'écran ne montre que ce qui est sauvegardé).
+   * Résout à true si l'écriture a abouti.
+   */
+  const enqueue = useCallback((job: (myGen: number) => Promise<void>): Promise<boolean> => {
     const myGen = gen.current
-    queue.current = queue.current
-      .then(() => (myGen === gen.current ? job() : undefined))
-      .catch((e: unknown) => console.error('Enregistrement de la séance échoué', e))
-    return queue.current
-  }, [])
+    const run = queue.current.then(async () => {
+      if (myGen !== gen.current) return false
+      try {
+        await job(myGen)
+        return true
+      } catch (e) {
+        if (e instanceof StaleWrite) return false
+        console.error('Enregistrement de la séance échoué', e)
+        commit({ ...stateRef.current, saveError: true })
+        try {
+          await resyncRef.current()
+        } catch (e2) {
+          console.error('Resynchronisation de la séance échouée', e2)
+        }
+        return false
+      }
+    })
+    queue.current = run.then(() => undefined)
+    inFlight.add(run)
+    void run.finally(() => inFlight.delete(run))
+    return run
+  }, [commit])
 
   const load = useCallback(async (isCancelled: () => boolean) => {
     let data = await loadAll()
@@ -81,11 +116,13 @@ export function useSession() {
     gen.current++
     const templates = [...data.templates].sort((a, b) => a.rotationOrder - b.rotationOrder)
     const version = stateRef.current.version + 1
-    if (templates.length === 0) return commit({ ...LOADING, status: 'empty', version })
+    const saveError = stateRef.current.saveError
+    if (templates.length === 0) return commit({ ...LOADING, status: 'empty', version, saveError })
     const templateId = session ? session.templateId : nextTemplateId(templates, data.sessions, data.sets)
     const template = templates.find((t) => t.id === templateId)!
-    commit({ status: 'ready', templates, template, session, items: buildItems(data, templateId, session), version })
+    commit({ status: 'ready', templates, template, session, items: buildItems(data, templateId, session), version, saveError })
   }, [commit])
+  resyncRef.current = () => load(() => false)
 
   useEffect(() => {
     let cancelled = false
@@ -94,10 +131,15 @@ export function useSession() {
   }, [load])
 
   /** Crée la séance en base à la première action, avec toutes les séries proposées. */
-  const ensureSession = useCallback(async (): Promise<string> => {
+  const ensureSession = useCallback(async (myGen: number): Promise<string> => {
     const cur = stateRef.current
     if (cur.session) return cur.session.id
     const s = await startSession(cur.template!.id)
+    if (myGen !== gen.current) {
+      // Séance changée pendant la création : on n'en garde pas de trace.
+      await deleteSession(s.id)
+      throw new StaleWrite()
+    }
     const latest = stateRef.current
     commit({ ...latest, session: s })
     await Promise.all(latest.items.flatMap((i) => i.sets).map((x) => saveSet({ ...x, sessionId: s.id })))
@@ -106,8 +148,8 @@ export function useSession() {
 
   const persist = useCallback((sets: SetLog[]) => {
     if (sets.length === 0) return
-    enqueue(async () => {
-      const sessionId = await ensureSession()
+    void enqueue(async (myGen) => {
+      const sessionId = await ensureSession(myGen)
       await Promise.all(sets.map((s) => saveSet({ ...s, sessionId })))
     })
   }, [enqueue, ensureSession])
@@ -152,15 +194,17 @@ export function useSession() {
     const set = cur.items[itemIndex].sets.find((s) => s.id === setId)
     if (!set) return null
     commit({ ...cur, items: cur.items.map((it, i) => (i === itemIndex ? { ...it, sets: it.sets.filter((s) => s.id !== setId) } : it)) })
-    enqueue(async () => {
-      await ensureSession()
+    void enqueue(async (myGen) => {
+      await ensureSession(myGen)
       await deleteSet(setId)
     })
-    return { itemIndex, set }
+    return { version: cur.version, itemIndex, set }
   }, [commit, enqueue, ensureSession])
 
-  const restoreSet = useCallback(({ itemIndex, set }: RemovedSet) => {
-    const sets = stateRef.current.items[itemIndex].sets
+  const restoreSet = useCallback(({ version, itemIndex, set }: RemovedSet) => {
+    const cur = stateRef.current
+    if (cur.version !== version) return
+    const sets = cur.items[itemIndex].sets
     if (sets.some((s) => s.id === set.id)) return
     replaceSets(itemIndex, [...sets, set].sort((a, b) => a.setIndex - b.setIndex))
   }, [replaceSets])
@@ -175,17 +219,19 @@ export function useSession() {
     const old = cur.session
     gen.current++
     commit({ ...cur, template, session: null, items: buildItems(data, templateId, null), version: cur.version + 1 })
-    if (old) enqueue(() => deleteSession(old.id))
+    if (old) void enqueue(() => deleteSession(old.id))
   }, [commit, enqueue])
 
   /** Clôt la séance après les écritures en attente, puis propose la suivante. */
-  const finish = useCallback(() => {
-    const id = stateRef.current.session?.id
+  const finish = useCallback((): Promise<boolean> => {
     return enqueue(async () => {
+      const id = stateRef.current.session?.id
       if (id) await endSession(id)
       await load(() => false)
     })
   }, [enqueue, load])
 
-  return { state, toggleDone, updateSet, addSet, removeSet, restoreSet, selectTemplate, finish }
+  const dismissError = useCallback(() => commit({ ...stateRef.current, saveError: false }), [commit])
+
+  return { state, toggleDone, updateSet, addSet, removeSet, restoreSet, selectTemplate, finish, dismissError }
 }

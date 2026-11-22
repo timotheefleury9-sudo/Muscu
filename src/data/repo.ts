@@ -37,7 +37,7 @@ export const deleteSession = (id: string): Promise<void> =>
     await db.sessions.delete(id)
   })
 
-export const listSets =async (sessionId: string): Promise<SetLog[]> =>
+export const listSets = async (sessionId: string): Promise<SetLog[]> =>
   (await db.sets.where('sessionId').equals(sessionId).toArray()).sort((a, b) => a.setIndex - b.setIndex)
 export const saveSet = async (s: SetLog): Promise<void> => { await db.sets.put(s) }
 export const deleteSet = (id: string): Promise<void> => db.sets.delete(id)

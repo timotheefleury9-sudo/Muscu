@@ -136,6 +136,16 @@
 }
 .toast button { min-height: 44px; padding: 0 14px; font: inherit; font-weight: 700; color: var(--bg); background: none; border: 0; cursor: pointer; }
 
+/* Échec d'enregistrement : message persistant, en haut, sous la barre d'état */
+.save-error {
+  position: fixed; z-index: 16;
+  top: calc(var(--safe-top) + 8px); left: calc(var(--safe-left) + 16px); right: calc(var(--safe-right) + 16px);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 8px 6px 8px 16px; border-radius: 16px; background: var(--danger); color: var(--danger-contrast);
+  font-size: 15px; font-weight: 600; line-height: 1.35;
+}
+.save-error button { flex: none; min-height: 44px; padding: 0 12px; font: inherit; font-weight: 700; color: inherit; background: none; border: 0; cursor: pointer; }
+
 /* Feuille de confirmation */
 .scrim { position: fixed; inset: 0; z-index: 20; background: rgba(0, 0, 0, 0.45); }
 .sheet {

@@ -17,7 +17,7 @@ function dayLabel(iso: string): string {
 interface Toast { key: number; text: string; undo?: RemovedSet }
 
 export default function SessionPage() {
-  const { state, toggleDone, updateSet, addSet, removeSet, restoreSet, selectTemplate, finish } = useSession()
+  const { state, toggleDone, updateSet, addSet, removeSet, restoreSet, selectTemplate, finish, dismissError } = useSession()
   const [selected, setSelected] = useState<{ version: number; index: number } | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [toast, setToast] = useState<Toast | null>(null)
@@ -91,8 +91,7 @@ export default function SessionPage() {
   const confirmFinish = async () => {
     setSheetOpen(false)
     window.clearTimeout(timers.current.advance)
-    await finish()
-    showToast('Séance enregistrée')
+    if (await finish()) showToast('Séance enregistrée')
   }
 
   const { items, template, templates, session } = state
@@ -137,7 +136,10 @@ export default function SessionPage() {
           {doneTotal === 0 && templates.length > 1 && (
             <div className="tpl-switch" role="group" aria-label="Changer de séance">
               {templates.map((t) => (
-                <button key={t.id} type="button" aria-pressed={t.id === template.id} onClick={() => selectTemplate(t.id)}>
+                <button key={t.id} type="button" aria-pressed={t.id === template.id} onClick={() => {
+                  if (toast?.undo) setToast(null)
+                  selectTemplate(t.id)
+                }}>
                   {t.name}
                 </button>
               ))}
@@ -179,6 +181,23 @@ export default function SessionPage() {
           </div>
         )}
       </section>
+
+      <AnimatePresence>
+        {state.saveError && (
+          <motion.div
+            key="save-error"
+            className="save-error"
+            role="alert"
+            initial={{ y: -16, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -16, opacity: 0 }}
+            transition={{ duration: T, ease: EASE }}
+          >
+            <span>Enregistrement impossible — tes dernières saisies n'ont pas été sauvegardées</span>
+            <button type="button" onClick={dismissError}>Fermer</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {toast && (
