@@ -101,10 +101,8 @@ describe('exerciseSeries', () => {
     expect(s.map(p => p.value)).toEqual([null, 101.3, null, 106.7])
   })
   it('poids du corps : reps sans lest, e1RM avec lest', () => {
-    const d = base([sess('a', W1), sess('b', W2)], [set('a', 'pompes', 0, 20), set('a', 'pompes', 0, 25), set('b', 'pompes', 10, 15)])
+    const d = base([sess('a', W1), sess('b', W2)], [set('a', 'pompes', 0, 20), set('a', 'pompes', 0, 25), set('b', 'pompes', 10, 12)])
     const s = exerciseSeries(d, 'pompes', 2, '2026-11-09')
-    expect(s.map(p => p.value)).toEqual([25, 15])
-    const s2 = exerciseSeries(d, 'pompes', 2, '2026-11-09')
-    expect(s2[1].value).toBe(15)
+    expect(s.map(p => p.value)).toEqual([25, 14])
   })
 })
