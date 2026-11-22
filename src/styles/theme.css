@@ -46,9 +46,9 @@ body {
   overscroll-behavior: none;
 }
 
-/* iOS 27 en mode standalone : la zone réellement affichée est 100dvh (innerHeight),
-   pas l'écran entier. La bande en dessous est peinte par iOS (couleur theme-color).
-   100vh ne sert que de repli pour les navigateurs sans dvh. */
+/* iOS 27 en mode standalone : avec `black-translucent`, une bande de 62 pt en bas de l'écran
+   n'était pas affichable (innerHeight < screen.height). Avec `default`, la zone affichable
+   couvre tout l'écran. 100vh ne sert que de repli pour les navigateurs sans dvh. */
 .app {
   position: fixed;
   top: 0;
@@ -72,33 +72,35 @@ body {
 .page h1 { font-size: 1.75rem; margin: 0 0 16px; }
 
 .tabbar {
+  flex: none;
   display: flex;
   background: var(--surface);
   border-top: 1px solid var(--border);
-  /* Le home indicator est dans la bande peinte par iOS quand lvh > dvh : on ne compte que la part restante. */
-  padding: 0 var(--safe-right) max(0px, calc(var(--safe-bottom) - (100lvh - 100dvh))) var(--safe-left);
+  padding: 0 calc(var(--safe-right) + 8px) max(var(--safe-bottom), 8px) calc(var(--safe-left) + 8px);
 }
 
 .tab {
   flex: 1;
+  height: 49px;
   min-height: 44px;
-  height: var(--tabbar-height);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
   color: var(--text-muted);
   text-decoration: none;
-  font-size: 0.8rem;
-  font-weight: 600;
+  text-align: center;
 }
 
-.tab.active { color: var(--accent); }
+.tab svg { width: 24px; height: 24px; }
 
-.diagnostic h2 { font-size: 1rem; margin: 24px 0 8px; }
-.diagnostic-toggle { display: flex; align-items: center; gap: 8px; min-height: 44px; }
-.diagnostic-values, .build-id {
+.tab.active { color: var(--text); }
+
+.build-id {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.75rem;
   color: var(--text-muted);
-  white-space: pre-wrap;
 }
