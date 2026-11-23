@@ -3,9 +3,10 @@ import { db } from './db'
 import {
   deleteTemplateExercise, getOpenSession, endSession, listSets, listTemplateExercises,
   loadAll, saveSet, saveTemplate, saveTemplateExercise, startSession, deleteSet, listTemplates, deleteTemplate, deleteSession, startSessionWithSets,
-  loadPrograms, saveTemplateExercises, createCustomExercise,
+  loadPrograms, saveTemplateExercises, createCustomExercise, createPastSession, moveSession, removeExerciseFromSession,
 } from './repo'
 import type { SetLog, TemplateExercise } from '../domain/types'
+import { nextTemplateId } from '../domain/rotation'
 
 beforeEach(async () => {
   await db.delete()
@@ -113,5 +114,66 @@ describe('repo', () => {
     await createCustomExercise(ex, te({ id: 'r1', exerciseId: 'c1' }))
     expect(await db.exercises.get('c1')).toBeDefined()
     expect(await db.templateExercises.get('r1')).toBeDefined()
+  })
+
+  describe('historique', () => {
+    const noSid = (over: Partial<SetLog> = {}): Omit<SetLog, 'sessionId'> => { const { sessionId: _s, ...rest } = set('x', over); return rest }
+
+    it('createPastSession crée une séance terminée et ses séries', async () => {
+      const at = new Date(2026, 10, 16, 12, 0).toISOString()
+      const a = noSid({ setIndex: 0 })
+      const s = await createPastSession('t1', at, [a, noSid({ setIndex: 1 })])
+      expect(s).toMatchObject({ templateId: 't1', startedAt: at, endedAt: at })
+      expect(await db.sessions.get(s.id)).toEqual(s)
+      const sets = await listSets(s.id)
+      expect(sets).toHaveLength(2)
+      expect(sets.every((x) => x.sessionId === s.id)).toBe(true)
+    })
+
+    it('createPastSession : échec d\'écriture des séries, rien n\'est écrit', async () => {
+      const bulk = vi.spyOn(db.sets, 'bulkAdd').mockRejectedValueOnce(new Error('quota'))
+      const put = vi.spyOn(db.sets, 'put').mockRejectedValueOnce(new Error('quota'))
+      await expect(createPastSession('t1', new Date().toISOString(), [noSid()])).rejects.toThrow()
+      bulk.mockRestore(); put.mockRestore()
+      expect(await db.sessions.count()).toBe(0)
+      expect(await db.sets.count()).toBe(0)
+    })
+
+    it('une séance passée plus ancienne que la dernière ne change pas nextTemplateId', async () => {
+      const templates = [{ id: 't1', name: 'A', rotationOrder: 0 }, { id: 't2', name: 'B', rotationOrder: 1 }, { id: 't3', name: 'C', rotationOrder: 2 }]
+      for (const t of templates) await saveTemplate(t)
+      for (const t of templates) await saveTemplateExercise(te({ templateId: t.id }))
+      await createPastSession('t2', new Date(2026, 10, 20, 10).toISOString(), [noSid()])
+      const next = async () => { const d = await loadAll(); return nextTemplateId(d.templates, d.sessions, d.sets, d.templateExercises) }
+      expect(await next()).toBe('t3')
+      await createPastSession('t1', new Date(2026, 10, 10, 10).toISOString(), [noSid()])
+      expect(await next()).toBe('t3')
+    })
+
+    it('moveSession met à jour les deux dates', async () => {
+      const s = await createPastSession('t1', new Date(2026, 10, 16, 12).toISOString(), [])
+      const a = new Date(2026, 10, 10, 9).toISOString()
+      const b = new Date(2026, 10, 10, 10).toISOString()
+      await moveSession(s.id, a, b)
+      expect(await db.sessions.get(s.id)).toMatchObject({ startedAt: a, endedAt: b })
+      await moveSession(s.id, a, null)
+      expect((await db.sessions.get(s.id))?.endedAt).toBeNull()
+    })
+
+    it('removeExerciseFromSession ne supprime que cet exercice dans cette séance', async () => {
+      const s1 = await createPastSession('t1', new Date(2026, 10, 16, 12).toISOString(), [noSid({ exerciseId: 'e1' }), noSid({ exerciseId: 'e1', setIndex: 1 }), noSid({ exerciseId: 'e2' })])
+      const s2 = await createPastSession('t1', new Date(2026, 10, 17, 12).toISOString(), [noSid({ exerciseId: 'e1' })])
+      await removeExerciseFromSession(s1.id, 'e1')
+      expect((await listSets(s1.id)).map((x) => x.exerciseId)).toEqual(['e2'])
+      expect(await listSets(s2.id)).toHaveLength(1)
+    })
+
+    it('removeExerciseFromSession : échec, rien n\'est supprimé', async () => {
+      const s = await createPastSession('t1', new Date(2026, 10, 16, 12).toISOString(), [noSid({ exerciseId: 'e1' }), noSid({ exerciseId: 'e1', setIndex: 1 })])
+      const del = vi.spyOn(db.sets, 'bulkDelete').mockRejectedValueOnce(new Error('quota'))
+      await expect(removeExerciseFromSession(s.id, 'e1')).rejects.toThrow()
+      del.mockRestore()
+      expect(await listSets(s.id)).toHaveLength(2)
+    })
   })
 })

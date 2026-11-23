@@ -54,6 +54,26 @@ export const deleteSession = (id: string): Promise<void> =>
     await db.sessions.delete(id)
   })
 
+/** Séance oubliée : créée terminée (endedAt = startedAt) avec ses séries, en une transaction. */
+export const createPastSession = (templateId: string, startedAt: string, sets: Omit<SetLog, 'sessionId'>[]): Promise<Session> =>
+  db.transaction('rw', db.sessions, db.sets, async () => {
+    const s: Session = { id: crypto.randomUUID(), templateId, startedAt, endedAt: startedAt }
+    await db.sessions.add(s)
+    for (const x of sets) await saveSet({ ...x, sessionId: s.id })
+    return s
+  })
+
+export const moveSession = async (id: string, startedAt: string, endedAt: string | null): Promise<void> => {
+  await db.sessions.update(id, { startedAt, endedAt })
+}
+
+/** Supprime toutes les séries d'un exercice dans une séance : toutes ou aucune. */
+export const removeExerciseFromSession = (sessionId: string, exerciseId: string): Promise<void> =>
+  db.transaction('rw', db.sets, async () => {
+    const ids = (await db.sets.where('sessionId').equals(sessionId).toArray()).filter((x) => x.exerciseId === exerciseId).map((x) => x.id)
+    await db.sets.bulkDelete(ids)
+  })
+
 export const countSessions = (): Promise<number> => db.sessions.count()
 
 export const listSets = async (sessionId: string): Promise<SetLog[]> =>

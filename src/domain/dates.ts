@@ -13,3 +13,39 @@ export function addDays(date: string, days: number): string {
   const [y, m, d] = date.split('-').map(Number)
   return fmt(new Date(y, m - 1, d + days))
 }
+
+/** Jour local (YYYY-MM-DD) de l'instant ISO. */
+export function localDay(iso: string): string {
+  return fmt(new Date(iso))
+}
+
+/** Ajoute des mois à un mois YYYY-MM. */
+export function addMonths(month: string, n: number): string {
+  const [y, m] = month.split('-').map(Number)
+  const d = new Date(y, m - 1 + n, 1)
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`
+}
+
+/** Semaines lundi→dimanche couvrant le mois, jours des mois voisins inclus. */
+export function monthGrid(month: string): string[][] {
+  const start = weekStart(new Date(+month.slice(0, 4), +month.slice(5, 7) - 1, 1, 12).toISOString())
+  const next = addMonths(month, 1)
+  const weeks: string[][] = []
+  for (let w = start; w < `${next}-01`; w = addDays(w, 7)) {
+    weeks.push(Array.from({ length: 7 }, (_, i) => addDays(w, i)))
+  }
+  return weeks
+}
+
+/** Instant ISO de 12:00 locale pour le jour YYYY-MM-DD. */
+export function noonOf(day: string): string {
+  const [y, m, d] = day.split('-').map(Number)
+  return new Date(y, m - 1, d, 12, 0, 0, 0).toISOString()
+}
+
+/** Même heure locale, autre jour (calendrier local, insensible au changement d'heure). */
+export function moveToDay(iso: string, day: string): string {
+  const t = new Date(iso)
+  const [y, m, d] = day.split('-').map(Number)
+  return new Date(y, m - 1, d, t.getHours(), t.getMinutes(), t.getSeconds(), t.getMilliseconds()).toISOString()
+}
