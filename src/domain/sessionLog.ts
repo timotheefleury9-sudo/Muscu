@@ -1,5 +1,5 @@
 import { daysBetween, localDay, shiftDays } from './dates'
-import type { AppData, Session, SetLog, TemplateExercise } from './types'
+import type { AppData, Session, SetLog, TemplateExercise, WorkoutTemplate } from './types'
 
 export interface SessionSummary { id: string; startedAt: string; day: string; templateName: string; exerciseCount: number; doneSets: number; open: boolean }
 
@@ -83,4 +83,27 @@ export function appendedSet(sessionSets: SetLog[], sessionId: string, exerciseId
     setIndex: pool.reduce((m, s) => Math.max(m, s.setIndex + 1), 0),
     plannedWeight: null, plannedReps: null, weight: last?.weight ?? 0, reps: last?.reps ?? 0, done: false,
   }
+}
+
+/** Jour (YYYY-MM-DD) demandé dans l'adresse : mal formé ou inexistant → aujourd'hui ; un jour futur est conservé (refusé à l'envoi). */
+export function dayFromParam(param: string | null, today: string): string {
+  if (!param || !/^\d{4}-\d{2}-\d{2}$/.test(param)) return today
+  const [y, m, d] = param.split('-').map(Number)
+  const t = new Date(y, m - 1, d)
+  return t.getFullYear() === y && t.getMonth() === m - 1 && t.getDate() === d ? param : today
+}
+
+/** Séries vides (0 kg × 0, non validées, rien de prévu) de chaque exercice du programme, dans l'ordre du programme. */
+export function blankSetsFor(templateExercises: TemplateExercise[]): Omit<SetLog, 'sessionId'>[] {
+  return [...templateExercises].sort((a, b) => a.order - b.order).flatMap((te) =>
+    Array.from({ length: te.sets }, (_, setIndex) => ({
+      id: crypto.randomUUID(), exerciseId: te.exerciseId, templateExerciseId: te.id, setIndex,
+      plannedWeight: null, plannedReps: null, weight: 0, reps: 0, done: false,
+    })))
+}
+
+/** Programmes ayant au moins un exercice (les autres sont sautés par la rotation), dans l'ordre de rotation. */
+export function nonEmptyTemplates(templates: WorkoutTemplate[], templateExercises: Pick<TemplateExercise, 'templateId'>[]): WorkoutTemplate[] {
+  const filled = new Set(templateExercises.map((te) => te.templateId))
+  return templates.filter((t) => filled.has(t.id)).sort((a, b) => a.rotationOrder - b.rotationOrder)
 }

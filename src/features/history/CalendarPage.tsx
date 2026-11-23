@@ -43,7 +43,9 @@ export default function CalendarPage() {
     const list = [...(days?.[day] ?? [])].reverse()
     if (list.length === 1) openSession(list[0].id)
     else if (list.length > 1) setChoice({ day, sessions: list })
+    else if (day <= today) setChoice({ day, sessions: [] })
   }
+  const addAt = (day: string) => navigate(`/seances/nouvelle?date=${day}`, { state: back })
 
   return (
     <ProgressScreen detail busy={!days}>
@@ -96,14 +98,14 @@ export default function CalendarPage() {
                   </span>
                 )
                 const current = day === today ? ('date' as const) : undefined
-                return list.length > 0 ? (
+                return list.length > 0 || day <= today ? (
                   <button
                     key={day}
                     type="button"
                     className={cls}
                     data-day={day}
                     aria-current={current}
-                    aria-label={`${longDay(day)}, ${list.length} ${list.length > 1 ? 'séances' : 'séance'}`}
+                    aria-label={list.length > 0 ? `${longDay(day)}, ${list.length} ${list.length > 1 ? 'séances' : 'séance'}` : `${longDay(day)}, aucune séance`}
                     onClick={() => openDay(day)}
                   >
                     {content}
@@ -128,14 +130,14 @@ export default function CalendarPage() {
         </button>
       </div>
 
-      <DaySheet choice={choice} onPick={openSession} onClose={() => setChoice(null)} />
+      <DaySheet choice={choice} onPick={openSession} onAdd={addAt} onClose={() => setChoice(null)} />
     </ProgressScreen>
   )
 }
 
 /** Feuille (même présentation que ConfirmSheet) : une ligne « 18:05 · Push » par séance du jour. */
-function DaySheet({ choice, onPick, onClose }: {
-  choice: { day: string; sessions: SessionSummary[] } | null; onPick: (id: string) => void; onClose: () => void
+function DaySheet({ choice, onPick, onAdd, onClose }: {
+  choice: { day: string; sessions: SessionSummary[] } | null; onPick: (id: string) => void; onAdd: (day: string) => void; onClose: () => void
 }) {
   const cancel = useRef<HTMLButtonElement>(null)
   useEffect(() => {
@@ -166,6 +168,11 @@ function DaySheet({ choice, onPick, onClose }: {
           >
             <h2 id="day-title">{longDay(choice.day)}</h2>
             <div className="h-sheet-list">
+              {choice.sessions.length === 0 && (
+                <button type="button" className="h-sheet-row" onClick={() => { onClose(); onAdd(choice.day) }}>
+                  Ajouter une séance ce jour-là
+                </button>
+              )}
               {choice.sessions.map((s) => (
                 <button key={s.id} type="button" className="h-sheet-row" onClick={() => { onClose(); onPick(s.id) }}>
                   {`${timeLabel(s.startedAt)} · ${s.templateName}`}

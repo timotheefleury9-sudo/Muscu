@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { appendedSet, canMoveTo, moveSessionTimes, sessionExercises, sessionsByDay, sessionSummaries } from './sessionLog'
+import { appendedSet, blankSetsFor, canMoveTo, dayFromParam, nonEmptyTemplates, moveSessionTimes, sessionExercises, sessionsByDay, sessionSummaries } from './sessionLog'
 import type { AppData, Session, SetLog, TemplateExercise } from './types'
 
 const at = (m: number, d: number, h = 10) => new Date(2026, m - 1, d, h, 0).toISOString()
@@ -111,5 +111,37 @@ describe('appendedSet', () => {
   })
   it('séance vide : setIndex 0', () => {
     expect(appendedSet([], 'a', 'e1', 'new').setIndex).toBe(0)
+  })
+})
+
+describe('dayFromParam', () => {
+  it('jour valide conservé, mal formé ou inexistant → aujourd\'hui, futur conservé (refusé à l\'envoi)', () => {
+    expect(dayFromParam('2026-11-10', '2026-11-23')).toBe('2026-11-10')
+    expect(dayFromParam(null, '2026-11-23')).toBe('2026-11-23')
+    expect(dayFromParam('hier', '2026-11-23')).toBe('2026-11-23')
+    expect(dayFromParam('2026-02-30', '2026-11-23')).toBe('2026-11-23')
+    expect(dayFromParam('2026-13-01', '2026-11-23')).toBe('2026-11-23')
+    expect(dayFromParam('2026-12-01', '2026-11-23')).toBe('2026-12-01')
+  })
+})
+
+describe('blankSetsFor', () => {
+  const te = (id: string, exerciseId: string, order: number, sets: number): TemplateExercise =>
+    ({ id, templateId: 't1', exerciseId, order, sets, repsMin: 8, repsMax: 12, restSec: 90 })
+  it('séries vides par exercice, dans l\'ordre du programme', () => {
+    const out = blankSetsFor([te('b', 'B', 1, 2), te('a', 'A', 0, 3)])
+    expect(out.map((s) => [s.exerciseId, s.setIndex, s.templateExerciseId])).toEqual([
+      ['A', 0, 'a'], ['A', 1, 'a'], ['A', 2, 'a'], ['B', 0, 'b'], ['B', 1, 'b'],
+    ])
+    expect(out.every((s) => s.weight === 0 && s.reps === 0 && !s.done && s.plannedWeight === null && s.plannedReps === null)).toBe(true)
+    expect(new Set(out.map((s) => s.id)).size).toBe(5)
+  })
+})
+
+describe('nonEmptyTemplates', () => {
+  it('programmes avec au moins un exercice, dans l\'ordre de rotation', () => {
+    const t = (id: string, rotationOrder: number) => ({ id, name: id, rotationOrder })
+    const out = nonEmptyTemplates([t('c', 2), t('a', 0), t('b', 1)], [{ templateId: 'c' }, { templateId: 'a' }, { templateId: 'a' }])
+    expect(out.map((x) => x.id)).toEqual(['a', 'c'])
   })
 })

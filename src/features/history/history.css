@@ -68,3 +68,15 @@
 .h-action-icon svg { width: 20px; height: 20px; }
 .prog .h-action.is-danger { color: var(--danger); background: none; }
 .prog .h-action.is-danger:active { background: var(--surface); }
+
+/* Ajout d'une séance oubliée. */
+.h-date-full { width: 100%; box-sizing: border-box; }
+.prog .h-choose { margin: 18px 2px 10px; }
+.h-templates { display: flex; flex-direction: column; gap: 8px; }
+.prog .h-template {
+  min-height: 64px; padding: 12px 18px; border-radius: var(--radius-card); background: var(--surface); text-align: left;
+  display: flex; flex-direction: column; justify-content: center; gap: 2px; transition: background-color var(--dur-fast) var(--ease);
+}
+.prog .h-template:active { background: var(--surface-2); }
+.h-template-name { font-size: 18px; font-weight: 700; }
+.h-template-meta { font-size: 14px; color: var(--text-muted); }

@@ -8,6 +8,7 @@ import MuscleDetailPage from './features/progress/MuscleDetailPage'
 import CalendarPage from './features/history/CalendarPage'
 import SessionListPage from './features/history/SessionListPage'
 import SessionDetailPage from './features/history/SessionDetailPage'
+import NewPastSessionPage from './features/history/NewPastSessionPage'
 import SettingsPage from './features/settings/SettingsPage'
 import InstallBanner from './features/shell/InstallBanner'
 import ErrorBoundary from './features/shell/ErrorBoundary'
@@ -65,6 +66,7 @@ export default function App() {
               } />
             <Route path="/progression/calendrier" element={<CalendarPage />} />
             <Route path="/progression/seances" element={<SessionListPage />} />
+            <Route path="/seances/nouvelle" element={<NewPastSessionPage />} />
             <Route path="/seances/:id" element={<SessionDetailPage />} />
             <Route path="/reglages" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
