@@ -1,14 +1,17 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { CartesianGrid, Line, LineChart, ReferenceLine, Tooltip, XAxis, YAxis } from 'recharts'
-import { exerciseHighlights, exerciseSeries, type ExerciseHighlights, type ExerciseSeries } from '../../domain/metrics'
+import { exerciseHighlights, exerciseSeries, type ExerciseHighlights, type ExerciseSeries, type SeriesMetric } from '../../domain/metrics'
+import { recentSessionLogs, type SessionLog } from '../../domain/exerciseLog'
 import type { Exercise } from '../../domain/types'
 import { formatWeight } from '../../domain/parseWeight'
-import { GROUP_LABEL, formatSet, shortDate, weekFromParam, weekLabel } from './labels'
+import { GROUP_LABEL, dayDate, formatLogSet, formatSet, shortDate, weekFromParam, weekLabel } from './labels'
 import { BackButton, ProgressScreen } from './parts'
 import { useAppData } from './useAppData'
 
 const WEEKS = 12
+const LOG_SESSIONS = 6
+const METRIC_LABEL: Record<SeriesMetric, string> = { load: 'Charge max', e1rm: '1RM estimé' }
 const X_TICKS = [0, 3, 6, 9, 11]
 const fmt = (n: number): string => formatWeight(Math.round(n * 10) / 10)
 
@@ -23,7 +26,9 @@ function yScale(values: number[], reps: boolean): { domain: [number, number]; ti
   return { domain: [lo, hi], ticks: [lo, (lo + hi) / 2, hi] }
 }
 
-function Chart({ series, reps, sel, onSelect }: { series: Point[]; reps: boolean; sel: number; onSelect: (i: number) => void }) {
+function Chart({ series, reps, label, sel, onSelect }: {
+  series: Point[]; reps: boolean; label: string; sel: number; onSelect: (i: number) => void
+}) {
   const values = series.flatMap((p) => (p.value === null ? [] : [p.value]))
   const { domain, ticks } = yScale(values, reps)
   return (
@@ -88,7 +93,7 @@ function Chart({ series, reps, sel, onSelect }: { series: Point[]; reps: boolean
       </LineChart>
       <table className="sr-only">
         <tbody>
-          <tr><th>Semaine</th><th>Valeur</th></tr>
+          <tr><th>Semaine</th><th>{label}</th></tr>
           {series.map((p) => (
             <tr key={p.weekStart}><td>{weekLabel(p.weekStart)}</td><td>{p.value === null ? 'pas de séance' : fmt(p.value)}</td></tr>
           ))}
@@ -103,12 +108,18 @@ export default function ExerciseChartPage() {
   const [params] = useSearchParams()
   const data = useAppData()
   const week = weekFromParam(params.get('semaine'))
+  const [metric, setMetric] = useState<SeriesMetric>('load')
 
   const view = useMemo(() => {
     if (!data) return null
     const ex = data.exercises.find((e) => e.id === id)
     if (!ex) return { ex: undefined } as const
-    return { ex, series: exerciseSeries(data, id, WEEKS, week), highlights: exerciseHighlights(data, id, week) }
+    return {
+      ex,
+      series: { load: exerciseSeries(data, id, WEEKS, week, 'load'), e1rm: exerciseSeries(data, id, WEEKS, week, 'e1rm') },
+      highlights: exerciseHighlights(data, id, week),
+      logs: recentSessionLogs(data, id, LOG_SESSIONS),
+    }
   }, [data, id, week])
 
   if (view && !view.ex) return <Navigate to="/progression" replace />
@@ -119,16 +130,32 @@ export default function ExerciseChartPage() {
       {ex && (
         <BackButton fallbackTo={`/progression/muscle/${ex.primaryGroup}?semaine=${week}`} fallbackLabel={GROUP_LABEL[ex.primaryGroup]} />
       )}
-      {ex && view && <Content key={`${id}-${week}`} ex={ex} series={view.series.points} unit={view.series.unit} highlights={view.highlights} />}
+      {ex && view && (
+        <Content
+          key={`${id}-${week}`}
+          ex={ex}
+          series={view.series[metric]}
+          metric={metric}
+          onMetric={setMetric}
+          highlights={view.highlights}
+          logs={view.logs}
+        />
+      )}
     </ProgressScreen>
   )
 }
 
-function Content({ ex, series, unit, highlights }: {
-  ex: Exercise; series: Point[]; unit: ExerciseSeries['unit']; highlights: ExerciseHighlights | null
+function Content({ ex, series: { points: series, unit }, metric, onMetric, highlights, logs }: {
+  ex: Exercise
+  series: ExerciseSeries
+  metric: SeriesMetric
+  onMetric: (m: SeriesMetric) => void
+  highlights: ExerciseHighlights | null
+  logs: SessionLog[]
 }) {
   const [picked, setPicked] = useState<number | null>(null)
   const reps = unit === 'reps'
+  const label = reps ? 'Répétitions' : `${METRIC_LABEL[metric]} (kg)`
   const present = series.map((p, i) => (p.value === null ? -1 : i)).filter((i) => i >= 0)
   const last = present[present.length - 1]
   const sel = picked !== null && series[picked]?.value != null ? picked : last
@@ -155,19 +182,48 @@ function Content({ ex, series, unit, highlights }: {
           </div>
         </div>
       )}
+      {!reps && (
+        <div className="p-seg" role="group" aria-label="Mesure">
+          {(['load', 'e1rm'] as const).map((m) => (
+            <button key={m} type="button" aria-pressed={metric === m} onClick={() => onMetric(m)}>
+              {METRIC_LABEL[m]}
+            </button>
+          ))}
+        </div>
+      )}
       <section className="p-card">
-        <p className="p-chart-label">{reps ? 'Répétitions' : '1RM estimé (kg)'}</p>
+        <p className="p-chart-label">{label}</p>
         {sel === undefined ? (
           <p className="p-bars-empty">Aucune séance sur les {WEEKS} dernières semaines.</p>
         ) : (
           <>
-            <Chart series={series} reps={reps} sel={sel} onSelect={setPicked} />
+            <Chart series={series} reps={reps} label={label} sel={sel} onSelect={setPicked} />
             <p className="p-chart-note">
               {gaps && 'Les semaines sans séance laissent un trou. '}Touchez un point pour voir sa semaine.
             </p>
           </>
         )}
       </section>
+      {logs.length > 0 && (
+        <section className="p-card" aria-labelledby="p-log-title">
+          <h2 className="p-card-title" id="p-log-title">Dernières séances</h2>
+          <ul className="p-log">
+            {logs.map((log) => (
+              <li key={log.sessionId} className="p-log-row">
+                <span className="p-log-date">{dayDate(log.startedAt)}</span>
+                <span className="p-log-sets num">
+                  {log.sets.map((set, i) => (
+                    <Fragment key={i}>
+                      {i > 0 && ' · '}
+                      <span className={i === log.topIndex ? 'p-log-top' : undefined}>{formatLogSet(set, ex.bodyweight)}</span>
+                    </Fragment>
+                  ))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {highlights && (
         <section className="p-card" aria-label="Repères">
           <div className="p-fact">

@@ -40,3 +40,11 @@ export const nextWeek = (monday: string): string => addDays(monday, 7)
 /** « 77,5 kg × 11 », « Poids du corps × 9 » */
 export const formatSet = (s: PerformedSet, bodyweight: boolean): string =>
   `${bodyweight && s.weight === 0 ? 'Poids du corps' : `${formatWeight(s.weight)} kg`} × ${s.reps}`
+
+/** « lun. 16 nov. » (date locale de l'horodatage ISO) */
+export const dayDate = (iso: string): string =>
+  new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(iso))
+
+/** Série compacte du journal : « 77,5 × 12 », « PDC × 12 », « +5 × 8 » au poids du corps lesté. */
+export const formatLogSet = (s: PerformedSet, bodyweight: boolean): string =>
+  `${bodyweight ? (s.weight === 0 ? 'PDC' : `+${formatWeight(s.weight)}`) : formatWeight(s.weight)} × ${s.reps}`

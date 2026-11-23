@@ -146,6 +146,8 @@ export function weeklySummary(data: AppData, weekStartIso: string): WeeklySummar
 
 const round1 = (n: number): number => Math.round(n * 10) / 10
 
+export type SeriesMetric = 'load' | 'e1rm'
+
 export interface ExerciseSeries {
   unit: 'kg' | 'reps'
   points: { weekStart: string; value: number | null }[]
@@ -155,8 +157,11 @@ export interface ExerciseSeries {
  * Valeur hebdomadaire d'un exercice sur `weeks` semaines finissant à endWeek (null = pas de séance).
  * Unité unique sur la fenêtre : e1RM en kg ; pour un exercice au poids du corps jamais lesté
  * dans la fenêtre, répétitions de la meilleure série. S'il a été lesté, seules les séries lestées comptent.
+ * metric 'load' : charge max validée de la semaine (lest max au poids du corps) au lieu de l'e1RM.
  */
-export function exerciseSeries(data: AppData, exerciseId: string, weeks: number, endWeek: string): ExerciseSeries {
+export function exerciseSeries(
+  data: AppData, exerciseId: string, weeks: number, endWeek: string, metric: SeriesMetric = 'e1rm',
+): ExerciseSeries {
   const ex = data.exercises.find(e => e.id === exerciseId)
   const byWeek = new Map(weeksOf(data, exerciseId).map(w => [w.week, w.sets]))
   const window = Array.from({ length: weeks }, (_, i) => addDays(endWeek, -7 * (weeks - 1 - i)))
@@ -167,7 +172,8 @@ export function exerciseSeries(data: AppData, exerciseId: string, weeks: number,
     const sets = (byWeek.get(week) ?? []).filter(s => !bodyweight || !loaded || s.weight > 0)
     if (sets.length === 0 || !ex) return { weekStart: week, value: null }
     const best = bestOf(sets, bodyweight)
-    return { weekStart: week, value: loaded ? round1(e1rm(best.weight, best.reps)) : best.reps }
+    if (!loaded) return { weekStart: week, value: best.reps }
+    return { weekStart: week, value: metric === 'load' ? Math.max(...sets.map(s => s.weight)) : round1(e1rm(best.weight, best.reps)) }
   })
   return { unit, points }
 }

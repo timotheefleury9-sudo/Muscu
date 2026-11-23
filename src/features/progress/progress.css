@@ -76,3 +76,14 @@
 .p-fact-lab { font-size: 15px; color: var(--text-muted); }
 .p-fact-lab small { display: block; font-size: 13px; color: var(--faint); margin-top: 2px; }
 .p-fact-val { font-size: 15px; font-weight: 600; text-align: right; }
+
+/* Sélecteur de mesure et journal des séances */
+.p-seg { display: flex; padding: 4px; border-radius: var(--radius-pill); background: var(--surface); margin: 0 0 12px; transition: background-color var(--dur) var(--ease); }
+.prog .p-seg button { flex: 1; min-height: 44px; border-radius: var(--radius-pill); text-align: center; font-weight: 600; font-size: 14px; color: var(--text-muted); transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease); }
+.prog .p-seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--text); }
+.p-log { list-style: none; margin: 0; padding: 0; }
+.p-log-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; min-height: 48px; padding: 10px 2px; border-top: 1px solid var(--border); }
+.p-log-row:first-child { border-top: 0; }
+.p-log-date { font-size: 15px; color: var(--text-muted); white-space: nowrap; flex: none; }
+.p-log-sets { font-size: 15px; font-weight: 500; color: var(--text-muted); text-align: right; font-variant-numeric: tabular-nums; }
+.p-log-top { font-weight: 700; color: var(--text); }

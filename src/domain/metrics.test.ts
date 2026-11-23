@@ -147,6 +147,38 @@ describe('exerciseSeries', () => {
   })
 })
 
+describe('exerciseSeries : metric load (charge max)', () => {
+  it('poids max validé de la semaine, null sans séance ; e1rm reste le défaut', () => {
+    const d = base(
+      [sess('a', W1), sess('c', W3)],
+      [set('a', 'dev', 77.5, 12), set('a', 'dev', 80, 6), set('a', 'dev', 90, 1, false), set('c', 'dev', 82.5, 8), set('c', 'dev', 80, 10)],
+    )
+    expect(exerciseSeries(d, 'dev', 4, '2026-11-16', 'load')).toEqual({
+      unit: 'kg',
+      points: [
+        { weekStart: '2026-10-26', value: null }, { weekStart: '2026-11-02', value: 80 },
+        { weekStart: '2026-11-09', value: null }, { weekStart: '2026-11-16', value: 82.5 },
+      ],
+    })
+    expect(exerciseSeries(d, 'dev', 4, '2026-11-16').points.map(p => p.value)).toEqual([null, 108.5, null, 106.7])
+  })
+  it('poids du corps lesté : kg du lest max ; semaines sans lest => null', () => {
+    const d = base(
+      [sess('a', W1), sess('b', W2), sess('c', W3)],
+      [set('a', 'pompes', 0, 20), set('b', 'pompes', 10, 12), set('b', 'pompes', 5, 15), set('b', 'pompes', 0, 30), set('c', 'pompes', 0, 28)],
+    )
+    expect(exerciseSeries(d, 'pompes', 3, '2026-11-16', 'load')).toEqual({
+      unit: 'kg', points: [{ weekStart: '2026-11-02', value: null }, { weekStart: '2026-11-09', value: 10 }, { weekStart: '2026-11-16', value: null }],
+    })
+  })
+  it('poids du corps jamais lesté : reps de la meilleure série', () => {
+    const d = base([sess('b', W2), sess('c', W3)], [set('b', 'pompes', 0, 20), set('b', 'pompes', 0, 18), set('c', 'pompes', 0, 25)])
+    expect(exerciseSeries(d, 'pompes', 2, '2026-11-16', 'load')).toEqual({
+      unit: 'reps', points: [{ weekStart: '2026-11-09', value: 20 }, { weekStart: '2026-11-16', value: 25 }],
+    })
+  })
+})
+
 describe('weeklySummary : ordre des exercices dans une séance', () => {
   const te = (id: string, exerciseId: string, order: number) => ({ id, templateId: 't', exerciseId, order, sets: 3, repsMin: 8, repsMax: 12, restSec: 90 })
   const at = (id: string, sessionId: string, exerciseId: string, templateExerciseId: string | null, setIndex: number): SetLog => ({
