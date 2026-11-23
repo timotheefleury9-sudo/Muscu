@@ -48,7 +48,11 @@ export default function CalendarPage() {
   const addAt = (day: string) => navigate(`/seances/nouvelle?date=${day}`, { state: back })
 
   return (
-    <ProgressScreen detail busy={!days}>
+    <ProgressScreen
+      detail
+      busy={!days}
+      overlays={<DaySheet choice={choice} onPick={openSession} onAdd={addAt} onClose={() => setChoice(null)} />}
+    >
       <BackButton fallbackTo="/progression" fallbackLabel="Progression" />
       <h1 className="p-title">Calendrier</h1>
       <div className="p-week-nav">
@@ -129,8 +133,6 @@ export default function CalendarPage() {
           Ajouter une séance
         </button>
       </div>
-
-      <DaySheet choice={choice} onPick={openSession} onAdd={addAt} onClose={() => setChoice(null)} />
     </ProgressScreen>
   )
 }

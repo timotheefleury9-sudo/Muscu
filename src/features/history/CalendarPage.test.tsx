@@ -123,6 +123,8 @@ describe('Calendrier', () => {
     await waitFor(() => expect(pillDays()).toHaveLength(4))
     await userEvent.click(document.querySelector('[data-day="2026-11-16"]') as HTMLElement)
     const sheet = await screen.findByRole('dialog', { name: 'lundi 16 novembre' })
+    // Hors de la section animée (un ancêtre transformé fausserait le position: fixed).
+    expect(sheet.closest('section.page')).toBeNull()
     const choices = within(sheet).getAllByRole('button').filter((b) => b.textContent !== 'Annuler')
     expect(choices.map((b) => b.textContent)).toEqual(['09:30 · Push', '18:05 · Push'])
     await userEvent.click(choices[1])
@@ -160,7 +162,8 @@ describe('Calendrier', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Toutes mes séances' })).toBeInTheDocument()
     expect(visited.at(-1)).toBe('/progression/seances')
     const nov = await screen.findByRole('region', { name: 'novembre 2026' })
-    const rows = within(nov).getAllByRole('button').map((b) => b.textContent)
+    const rowsOf = (r: HTMLElement) => within(r).getAllByRole('button', { name: /^(?!Supprimer)/ })
+    const rows = rowsOf(nov).map((b) => b.textContent)
     expect(rows).toEqual([
       'ven. 20 nov. · Push · 1 exercice · 1 sérieEn cours',
       'mer. 18 nov. · Push · 1 exercice · 3 séries',
@@ -169,8 +172,8 @@ describe('Calendrier', () => {
       'lun. 2 nov. · Push · 1 exercice · 3 séries',
     ])
     const oct = screen.getByRole('region', { name: 'octobre 2026' })
-    expect(within(oct).getAllByRole('button').map((b) => b.textContent)).toEqual(['lun. 26 oct. · Push · 1 exercice · 2 séries'])
-    await userEvent.click(within(nov).getAllByRole('button')[2])
+    expect(rowsOf(oct).map((b) => b.textContent)).toEqual(['lun. 26 oct. · Push · 1 exercice · 2 séries'])
+    await userEvent.click(rowsOf(nov)[2])
     await waitFor(() => expect(visited).toContain(`/seances/${ids.nov16}`))
   })
 
