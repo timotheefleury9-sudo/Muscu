@@ -54,6 +54,8 @@ export const deleteSession = (id: string): Promise<void> =>
     await db.sessions.delete(id)
   })
 
+export const countSessions = (): Promise<number> => db.sessions.count()
+
 export const listSets = async (sessionId: string): Promise<SetLog[]> =>
   (await db.sets.where('sessionId').equals(sessionId).toArray()).sort((a, b) => a.setIndex - b.setIndex)
 export const saveSet = async (s: SetLog): Promise<void> => { await db.sets.put(s) }

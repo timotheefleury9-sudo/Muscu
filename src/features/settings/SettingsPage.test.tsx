@@ -9,6 +9,7 @@ import { loadAll } from '../../data/repo'
 import { seedIfEmpty } from '../../data/seed'
 import { APP_VERSION } from '../../config'
 import { LAST_EXPORT_KEY } from './exportReminder'
+import { pendingSettingsLoad } from './SettingsPage'
 
 const renderSettings = () =>
   render(
@@ -94,34 +95,46 @@ describe('Réglages', () => {
     expect(screen.queryByText('Données importées')).not.toBeInTheDocument()
   })
 
-  it('un fichier invalide affiche une erreur et ne modifie rien', async () => {
+  it('un fichier invalide affiche l\'erreur directement, sans demander confirmation, et ne modifie rien', async () => {
     const before = await loadAll()
     const user = userEvent.setup()
     renderSettings()
     await user.upload(fileInput(), backupFile('pas du json'))
-    const dialog = await screen.findByRole('dialog', { name: 'Remplacer toutes tes données ?' })
-    await user.click(within(dialog).getByRole('button', { name: 'Remplacer' }))
     expect(await screen.findByRole('alert')).toHaveTextContent("Ce fichier n'est pas un JSON valide.")
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(await loadAll()).toEqual(before)
   })
 
-  it('rappelle de sauvegarder si le dernier export date de plus de 30 jours', () => {
+  const addSession = () => db.sessions.add({ id: 'sess', templateId: 'tpl-push', startedAt: new Date().toISOString(), endedAt: new Date().toISOString() })
+
+  it('rappelle de sauvegarder si le dernier export date de plus de 30 jours', async () => {
+    await addSession()
     localStorage.setItem(LAST_EXPORT_KEY, new Date(Date.now() - 31 * 86400000).toISOString())
     renderSettings()
-    expect(document.querySelector('.set-reminder')).toHaveTextContent('Ta dernière sauvegarde date de plus de 30 jours.')
+    await waitFor(() => expect(document.querySelector('.set-reminder')).toHaveTextContent('Ta dernière sauvegarde date de plus de 30 jours.'))
   })
 
-  it('pas de rappel après un export récent', () => {
+  it('pas de rappel après un export récent', async () => {
+    await addSession()
     localStorage.setItem(LAST_EXPORT_KEY, new Date(Date.now() - 5 * 86400000).toISOString())
     renderSettings()
+    await screen.findByRole('button', { name: 'Exporter' })
+    await pendingSettingsLoad()
     expect(document.querySelector('.set-reminder')).toBeNull()
   })
 
-  it("le rappel s'affiche aussi sans aucun export, et reste fonctionnel si localStorage échoue", () => {
+  it('pas de rappel sur une installation neuve (aucune séance)', async () => {
+    renderSettings()
+    await pendingSettingsLoad()
+    expect(document.querySelector('.set-reminder')).toBeNull()
+  })
+
+  it("le rappel s'affiche aussi sans aucun export, et reste fonctionnel si localStorage échoue", async () => {
+    await addSession()
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('bloqué') })
     renderSettings()
     expect(screen.getByRole('button', { name: 'Exporter' })).toBeInTheDocument()
-    expect(document.querySelector('.set-reminder')).toHaveTextContent("Tu n'as pas encore sauvegardé tes données.")
+    await waitFor(() => expect(document.querySelector('.set-reminder')).toHaveTextContent("Tu n'as pas encore sauvegardé tes données."))
   })
 })
 

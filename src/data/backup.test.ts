@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db } from './db'
-import { exportData, importData } from './backup'
+import { exportData, importData, validateBackup } from './backup'
 import { loadAll, saveExercise, saveSet, saveTemplate, saveTemplateExercise, startSession } from './repo'
 import type { AppData } from '../domain/types'
 
@@ -65,5 +65,21 @@ describe('import : normalisation du catalogue', () => {
     expect(await importData(json)).toEqual({ ok: true })
     expect((await db.exercises.get('90_90_Hamstring'))!.category).toBe('stretching')
     expect(await db.exercises.get('perso')).toEqual(custom)
+  })
+})
+
+describe('validateBackup', () => {
+  it('valide une sauvegarde exportée, sans rien écrire', async () => {
+    await seed()
+    const json = await exportData()
+    await db.sessions.clear()
+    const v = validateBackup(json)
+    expect(v.ok).toBe(true)
+    expect(await db.sessions.count()).toBe(0)
+  })
+  it('refuse un fichier non JSON, étranger ou incomplet', () => {
+    expect(validateBackup('pas du json')).toEqual({ ok: false, error: "Ce fichier n'est pas un JSON valide." })
+    expect(validateBackup('{"format":"autre"}')).toEqual({ ok: false, error: "Ce fichier n'est pas une sauvegarde Muscu." })
+    expect(validateBackup('{"format":"muscu-backup","version":1,"data":{"exercises":[]}}')).toEqual({ ok: false, error: 'Données invalides : « templates ».' })
   })
 })

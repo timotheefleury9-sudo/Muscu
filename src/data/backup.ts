@@ -14,7 +14,8 @@ export async function exportData(): Promise<string> {
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 
-function validate(json: string): { ok: true; data: AppData } | { ok: false; error: string } {
+/** Contrôle du fichier de sauvegarde, sans rien écrire (avant de demander confirmation). */
+export function validateBackup(json: string): { ok: true; data: AppData } | { ok: false; error: string } {
   let parsed: unknown
   try { parsed = JSON.parse(json) } catch { return { ok: false, error: "Ce fichier n'est pas un JSON valide." } }
   if (!isObj(parsed) || parsed.format !== FORMAT) return { ok: false, error: "Ce fichier n'est pas une sauvegarde Muscu." }
@@ -31,7 +32,7 @@ function validate(json: string): { ok: true; data: AppData } | { ok: false; erro
 }
 
 export async function importData(json: string): Promise<{ ok: true } | { ok: false; error: string }> {
-  const v = validate(json)
+  const v = validateBackup(json)
   if (!v.ok) return v
   const data: AppData = { ...v.data, exercises: v.data.exercises.map(normalizeCatalogExercise) }
   try {

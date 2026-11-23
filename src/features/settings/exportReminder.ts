@@ -18,8 +18,9 @@ export function setLastExport(date: Date): void {
   }
 }
 
-/** Vrai si aucun export connu, ou s'il date de plus de 30 jours. */
-export function isExportReminderDue(last: string | null, now: Date): boolean {
+/** Vrai s'il y a au moins une séance et qu'aucun export n'est connu ou qu'il date de plus de 30 jours. */
+export function isExportReminderDue(last: string | null, now: Date, sessionCount: number): boolean {
+  if (sessionCount === 0) return false
   if (!last) return true
   const t = Date.parse(last)
   if (Number.isNaN(t)) return true

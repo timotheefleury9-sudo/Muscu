@@ -1,6 +1,7 @@
-import { useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { APP_VERSION } from '../../config'
-import { exportData, importData } from '../../data/backup'
+import { exportData, importData, validateBackup } from '../../data/backup'
+import { countSessions } from '../../data/repo'
 import { ConfirmSheet, type ConfirmRequest } from '../programs/parts'
 import { backupFileName, getLastExport, isExportReminderDue, setLastExport } from './exportReminder'
 import './settings.css'
@@ -28,12 +29,30 @@ function download(json: string, name: string) {
   setTimeout(() => URL.revokeObjectURL(url), 10_000)
 }
 
+const loads = new Set<Promise<unknown>>()
+/** Attend la fin du comptage des séances (tests). */
+export async function pendingSettingsLoad(): Promise<void> {
+  while (loads.size > 0) await Promise.allSettled([...loads])
+}
+
 export default function SettingsPage() {
   const [lastExport, setLast] = useState(getLastExport)
   const [message, setMessage] = useState<Message | null>(null)
   const [confirm, setConfirm] = useState<ConfirmRequest | null>(null)
   const [busy, setBusy] = useState(false)
+  // Nombre de séances : pas de rappel d'export sur une installation neuve. null = en cours de comptage.
+  const [sessionCount, setSessionCount] = useState<number | null>(null)
   const input = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    let alive = true
+    const p = countSessions()
+      .then((n) => { if (alive) setSessionCount(n) })
+      .catch((e: unknown) => console.error('Comptage des séances échoué', e))
+    loads.add(p)
+    void p.finally(() => loads.delete(p))
+    return () => { alive = false }
+  }, [])
 
   const onExport = async () => {
     setBusy(true)
@@ -62,6 +81,12 @@ export default function SettingsPage() {
       setMessage({ kind: 'error', text: 'Lecture du fichier impossible.' })
       return
     }
+    // Fichier invalide : erreur tout de suite, sans demander de confirmation (importData revalide).
+    const check = validateBackup(text)
+    if (!check.ok) {
+      setMessage({ kind: 'error', text: check.error })
+      return
+    }
     setConfirm({
       title: 'Remplacer toutes tes données ?',
       text: 'Tes programmes, séances et séries actuels seront remplacés par ceux du fichier. Cette action est irréversible.',
@@ -71,11 +96,12 @@ export default function SettingsPage() {
         const res = await importData(text)
         setBusy(false)
         setMessage(res.ok ? { kind: 'ok', text: 'Données importées' } : { kind: 'error', text: res.error })
+        if (res.ok) setSessionCount(await countSessions().catch(() => null))
       },
     })
   }
 
-  const due = isExportReminderDue(lastExport, new Date())
+  const due = sessionCount !== null && isExportReminderDue(lastExport, new Date(), sessionCount)
 
   return (
     <>

@@ -6,12 +6,16 @@ const daysAgo = (d: number) => new Date(now.getTime() - d * 86_400_000).toISOStr
 
 describe('isExportReminderDue', () => {
   it('vrai sans export connu ou avec une date illisible', () => {
-    expect(isExportReminderDue(null, now)).toBe(true)
-    expect(isExportReminderDue('n’importe quoi', now)).toBe(true)
+    expect(isExportReminderDue(null, now, 1)).toBe(true)
+    expect(isExportReminderDue('n’importe quoi', now, 1)).toBe(true)
   })
   it('faux jusqu’à 30 jours, vrai au-delà', () => {
-    expect(isExportReminderDue(daysAgo(30), now)).toBe(false)
-    expect(isExportReminderDue(daysAgo(31), now)).toBe(true)
+    expect(isExportReminderDue(daysAgo(30), now, 1)).toBe(false)
+    expect(isExportReminderDue(daysAgo(31), now, 1)).toBe(true)
+  })
+  it('jamais sans aucune séance (installation neuve)', () => {
+    expect(isExportReminderDue(null, now, 0)).toBe(false)
+    expect(isExportReminderDue(daysAgo(31), now, 0)).toBe(false)
   })
 })
 
