@@ -117,10 +117,18 @@
 .mini-check { width: 30px; height: 30px; border-radius: 50%; background: var(--success); color: var(--success-contrast); display: inline-grid; place-items: center; margin-left: 10px; }
 .mini-check svg { width: 16px; height: 16px; }
 
-/* Bas d'écran : bouton collant au-dessus de la barre d'onglets */
+/* Bas d'écran : bouton collant au-dessus de la barre d'onglets flottante.
+   Le collant s'arrête au bord de la marge basse de .app-main (--tabbar-clearance), donc
+   bottom: 0 suffit à dégager la barre. Le pseudo-élément prolonge le fond sous cette marge
+   pour que le contenu ne réapparaisse pas en liseré entre le bouton et la barre ; sa hauteur
+   égale la marge, il n'agrandit donc pas la zone défilable. */
 .session-footer {
   position: sticky; bottom: 0; z-index: 2; margin: 0 -16px; padding: 28px 16px 12px;
   background: linear-gradient(to bottom, transparent, var(--bg) 40%); pointer-events: none;
+}
+.session-footer::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 100%;
+  height: var(--tabbar-clearance); background: var(--bg);
 }
 .session .primary-btn {
   pointer-events: auto; width: 100%; min-height: 54px; border-radius: var(--radius-pill);

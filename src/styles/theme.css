@@ -36,6 +36,8 @@
   /* Barre d'onglets flottante (verre dépoli) */
   --tabbar-height: 64px;
   --tabbar-offset: calc(max(var(--safe-bottom), 8px) + 6px);
+  /* Hauteur réservée sous le contenu défilant (barre + décalage + 16 px). */
+  --tabbar-clearance: calc(var(--tabbar-height) + var(--tabbar-offset) + 16px);
   --glass-bg: rgba(38, 40, 45, 0.62);
   --glass-bg-opaque: #26282d;
   --glass-border: rgba(255, 255, 255, 0.09);
@@ -112,7 +114,7 @@ body {
   flex: 1;
   overflow-y: auto;
   /* Le contenu défile sous la barre flottante : marge basse = barre + décalage + 16 px. */
-  padding: 32px calc(var(--safe-right) + 16px) calc(var(--tabbar-height) + var(--tabbar-offset) + 16px) calc(var(--safe-left) + 16px);
+  padding: 32px calc(var(--safe-right) + 16px) var(--tabbar-clearance) calc(var(--safe-left) + 16px);
 }
 
 .page h1 { font-size: 1.75rem; margin: 0 0 16px; }
