@@ -21,14 +21,16 @@ export const Chevron = () => (
 )
 
 /** Écran de Progression ; un écran de détail entre par la droite, un retour par la gauche. */
-export function ProgressScreen({ detail, busy, children }: { detail: boolean; busy?: boolean; children: ReactNode }) {
+export function ProgressScreen({ detail, busy, className, overlays, children }: {
+  detail: boolean; busy?: boolean; className?: string; overlays?: ReactNode; children: ReactNode
+}) {
   const pop = useNavigationType() === 'POP'
   const first = useLocation().key === 'default'
   const slide = !first && (detail || pop)
   return (
     <MotionConfig reducedMotion="user">
       <motion.section
-        className="page prog"
+        className={className ? `page prog ${className}` : 'page prog'}
         aria-busy={busy || undefined}
         initial={slide ? { opacity: 0, x: pop ? -24 : 24 } : false}
         animate={{ opacity: 1, x: 0 }}
@@ -36,6 +38,8 @@ export function ProgressScreen({ detail, busy, children }: { detail: boolean; bu
       >
         {children}
       </motion.section>
+      {/* Hors de la section animée : un ancêtre transformé fausserait le position: fixed. */}
+      {overlays}
     </MotionConfig>
   )
 }

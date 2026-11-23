@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, type ReactNode } from 'react'
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import SessionPage from './features/session/SessionPage'
 import ProgramsPage from './features/programs/ProgramsPage'
@@ -7,6 +7,7 @@ import WeekSummaryPage from './features/progress/WeekSummaryPage'
 import MuscleDetailPage from './features/progress/MuscleDetailPage'
 import CalendarPage from './features/history/CalendarPage'
 import SessionListPage from './features/history/SessionListPage'
+import SessionDetailPage from './features/history/SessionDetailPage'
 import SettingsPage from './features/settings/SettingsPage'
 import InstallBanner from './features/shell/InstallBanner'
 import ErrorBoundary from './features/shell/ErrorBoundary'
@@ -15,10 +16,10 @@ import { DumbbellPath } from './features/shell/icons'
 // Recharts n'est chargé qu'à l'ouverture d'une courbe (bloc séparé, précaché par le service worker).
 const ExerciseChartPage = lazy(() => import('./features/progress/ExerciseChartPage'))
 
-const TABS = [
+const TABS: { to: string; label: string; end: boolean; also?: string; icon: ReactNode }[] = [
   { to: '/', label: 'Séance', end: true, icon: <DumbbellPath /> },
   { to: '/programmes', label: 'Programmes', end: false, icon: <path d="M5 6h14M5 12h14M5 18h9" /> },
-  { to: '/progression', label: 'Progression', end: false, icon: <path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6" /> },
+  { to: '/progression', label: 'Progression', end: false, also: '/seances/', icon: <path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6" /> },
   {
     to: '/reglages',
     label: 'Réglages',
@@ -64,6 +65,7 @@ export default function App() {
               } />
             <Route path="/progression/calendrier" element={<CalendarPage />} />
             <Route path="/progression/seances" element={<SessionListPage />} />
+            <Route path="/seances/:id" element={<SessionDetailPage />} />
             <Route path="/reglages" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
@@ -71,7 +73,13 @@ export default function App() {
       </main>
       <nav className="tabbar" aria-label="Navigation principale">
         {TABS.map((t) => (
-          <NavLink key={t.to} to={t.to} end={t.end} className="tab">
+          <NavLink
+            key={t.to}
+            to={t.to}
+            end={t.end}
+            // Le détail d'une séance (/seances/…) s'ouvre depuis Progression : l'onglet reste actif.
+            className={({ isActive }) => (isActive || (t.also !== undefined && pathname.startsWith(t.also)) ? 'tab active' : 'tab')}
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               {t.icon}
             </svg>

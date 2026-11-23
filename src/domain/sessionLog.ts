@@ -1,5 +1,5 @@
 import { daysBetween, localDay, shiftDays } from './dates'
-import type { AppData, Session } from './types'
+import type { AppData, Session, SetLog, TemplateExercise } from './types'
 
 export interface SessionSummary { id: string; startedAt: string; day: string; templateName: string; exerciseCount: number; doneSets: number; open: boolean }
 
@@ -44,4 +44,43 @@ export const canMoveTo = (day: string, today: string): boolean => day <= today
 export function moveSessionTimes(s: Pick<Session, 'startedAt' | 'endedAt'>, day: string): { startedAt: string; endedAt: string | null } {
   const n = daysBetween(localDay(s.startedAt), day)
   return { startedAt: shiftDays(s.startedAt, n), endedAt: s.endedAt === null ? null : shiftDays(s.endedAt, n) }
+}
+
+export interface SessionExercise { exerciseId: string; sets: SetLog[] }
+
+/**
+ * Séries d'une séance regroupées par exercice, dans le même ordre que le bilan : ordre du template,
+ * puis exercices hors template (ou dont la ligne a été supprimée) par premier setIndex, puis id. Séries par setIndex.
+ */
+export function sessionExercises(sets: SetLog[], templateExercises: TemplateExercise[]): SessionExercise[] {
+  const teOrder = new Map(templateExercises.map((te) => [te.id, te.order]))
+  const groups = new Map<string, { rank: number; first: number; sets: SetLog[] }>()
+  for (const s of sets) {
+    const rank = (s.templateExerciseId !== null ? teOrder.get(s.templateExerciseId) : undefined) ?? Infinity
+    const g = groups.get(s.exerciseId) ?? { rank: Infinity, first: Infinity, sets: [] }
+    g.rank = Math.min(g.rank, rank)
+    g.first = Math.min(g.first, s.setIndex)
+    g.sets.push(s)
+    groups.set(s.exerciseId, g)
+  }
+  const cmp = (x: string | number, y: string | number): number => (x < y ? -1 : x > y ? 1 : 0)
+  return [...groups.entries()]
+    .sort(([ea, a], [eb, b]) => cmp(a.rank, b.rank) || (a.rank === Infinity ? cmp(a.first, b.first) : 0) || cmp(ea, eb))
+    .map(([exerciseId, g]) => ({ exerciseId, sets: g.sets.sort((a, b) => a.setIndex - b.setIndex) }))
+}
+
+/**
+ * Série ajoutée à un exercice d'une séance (correction depuis l'historique) : poids et répétitions de sa dernière série
+ * (0/0 s'il est absent de la séance), non validée, sans valeurs prévues. Un exercice absent est hors template et
+ * passe après toutes les séries existantes.
+ */
+export function appendedSet(sessionSets: SetLog[], sessionId: string, exerciseId: string, id: string): SetLog {
+  const own = sessionSets.filter((s) => s.exerciseId === exerciseId)
+  const last = own.reduce<SetLog | undefined>((m, s) => (!m || s.setIndex > m.setIndex ? s : m), undefined)
+  const pool = last ? own : sessionSets
+  return {
+    id, sessionId, exerciseId, templateExerciseId: last?.templateExerciseId ?? null,
+    setIndex: pool.reduce((m, s) => Math.max(m, s.setIndex + 1), 0),
+    plannedWeight: null, plannedReps: null, weight: last?.weight ?? 0, reps: last?.reps ?? 0, done: false,
+  }
 }

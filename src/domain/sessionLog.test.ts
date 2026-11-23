@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { canMoveTo, moveSessionTimes, sessionsByDay, sessionSummaries } from './sessionLog'
-import type { AppData, Session, SetLog } from './types'
+import { appendedSet, canMoveTo, moveSessionTimes, sessionExercises, sessionsByDay, sessionSummaries } from './sessionLog'
+import type { AppData, Session, SetLog, TemplateExercise } from './types'
 
 const at = (m: number, d: number, h = 10) => new Date(2026, m - 1, d, h, 0).toISOString()
 const sess = (id: string, startedAt: string, over: Partial<Session> = {}): Session => ({ id, templateId: 't1', startedAt, endedAt: startedAt, ...over })
@@ -70,5 +70,46 @@ describe('moveSessionTimes', () => {
   })
   it('endedAt null reste null', () => {
     expect(moveSessionTimes({ startedAt: L(11, 22, 10, 0), endedAt: null }, '2026-11-20').endedAt).toBeNull()
+  })
+})
+
+describe('sessionExercises', () => {
+  const te = (id: string, order: number): TemplateExercise => ({ id, templateId: 't1', exerciseId: id, order, sets: 3, repsMin: 8, repsMax: 12, restSec: 90 })
+  const s = (exerciseId: string, setIndex: number, templateExerciseId: string | null = null): SetLog => ({
+    ...set('a', exerciseId, setIndex), templateExerciseId,
+  })
+  it('ordre du template, puis exercices hors template par premier setIndex ; séries par setIndex', () => {
+    const r = sessionExercises([
+      s('x', 7), s('b', 1, 'b'), s('y', 4), s('a', 2, 'a'), s('b', 0, 'b'), s('a', 0, 'a'), s('y', 5),
+    ], [te('a', 0), te('b', 1)])
+    expect(r.map((g) => g.exerciseId)).toEqual(['a', 'b', 'y', 'x'])
+    expect(r[0].sets.map((x) => x.setIndex)).toEqual([0, 2])
+  })
+  it('ligne de template supprimée : rangé avec les exercices hors template', () => {
+    const r = sessionExercises([s('gone', 0, 'gone'), s('a', 3, 'a'), s('z', 1)], [te('a', 0)])
+    expect(r.map((g) => g.exerciseId)).toEqual(['a', 'gone', 'z'])
+  })
+  it('aucune série : liste vide', () => {
+    expect(sessionExercises([], [])).toEqual([])
+  })
+})
+
+describe('appendedSet', () => {
+  const base = (exerciseId: string, setIndex: number, weight: number, reps: number, over: Partial<SetLog> = {}): SetLog => ({
+    ...set('a', exerciseId, setIndex), weight, reps, plannedWeight: weight, plannedReps: reps, templateExerciseId: `te-${exerciseId}`, ...over,
+  })
+  it('copie poids et répétitions de la dernière série de l\'exercice, non validée, sans valeurs prévues', () => {
+    const r = appendedSet([base('e1', 0, 80, 10), base('e1', 2, 82.5, 8), base('e2', 5, 20, 12)], 'a', 'e1', 'new')
+    expect(r).toEqual({
+      id: 'new', sessionId: 'a', exerciseId: 'e1', templateExerciseId: 'te-e1', setIndex: 3,
+      plannedWeight: null, plannedReps: null, weight: 82.5, reps: 8, done: false,
+    })
+  })
+  it('exercice absent de la séance : 0/0, hors template, après toutes les séries', () => {
+    const r = appendedSet([base('e1', 0, 80, 10), base('e2', 5, 20, 12)], 'a', 'e3', 'new')
+    expect(r).toMatchObject({ exerciseId: 'e3', templateExerciseId: null, setIndex: 6, weight: 0, reps: 0, done: false })
+  })
+  it('séance vide : setIndex 0', () => {
+    expect(appendedSet([], 'a', 'e1', 'new').setIndex).toBe(0)
   })
 })

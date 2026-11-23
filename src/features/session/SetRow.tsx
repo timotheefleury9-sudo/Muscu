@@ -89,9 +89,11 @@ interface SetRowProps {
   onCheck: () => void
   onChange: (patch: Partial<Pick<SetLog, 'weight' | 'reps'>>) => void
   onRemove: () => void
+  /** Bouton « Supprimer la série » dans la saisie, en plus du glissement (correction d'une séance passée). */
+  removeButton?: boolean
 }
 
-export default function SetRow({ set, n, increment, bodyweight, repsMin, open, onToggleOpen, onCheck, onChange, onRemove }: SetRowProps) {
+export default function SetRow({ set, n, increment, bodyweight, repsMin, open, onToggleOpen, onCheck, onChange, onRemove, removeButton = false }: SetRowProps) {
   const blank = isBlank(set, bodyweight)
   const x = useMotionValue(0)
   const drag = useDragControls()
@@ -207,6 +209,11 @@ export default function SetRow({ set, n, increment, bodyweight, repsMin, open, o
                   onCommit={(reps) => onChange({ reps })}
                 />
               </div>
+              {removeButton && (
+                <button type="button" className="text-btn muted set-remove" aria-label={`Supprimer la série ${n}`} onClick={onRemove}>
+                  Supprimer la série
+                </button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

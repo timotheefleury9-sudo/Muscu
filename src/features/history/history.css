@@ -46,3 +46,25 @@
 .prog .h-session { min-height: 52px; }
 .prog .h-session .p-tag { margin-left: 0; flex: none; }
 
+
+/* Détail d'une séance : en-tête et cartes de l'écran Séance (session.css), boutons remis à zéro par .prog et .session. */
+.h-detail .session-head { padding-top: 4px; }
+.h-detail .h-date-btn { margin: 6px 0 0 -8px; color: var(--text-muted); }
+.h-date-edit { margin-top: 10px; }
+.h-date-lab { display: block; font-size: 13px; color: var(--text-muted); margin: 0 0 6px; }
+.h-date-row { display: flex; align-items: center; gap: 8px; }
+.h-date-input {
+  flex: 1; min-width: 0; min-height: 48px; padding: 0 14px; border: 0; border-radius: var(--radius-control);
+  background: var(--surface); color: var(--text); font-family: inherit; font-size: 17px; /* >= 16 px : pas de zoom iOS */
+  color-scheme: light dark;
+}
+.h-date-error { margin: 6px 0 0; min-height: 1.3em; font-size: 14px; color: var(--danger); }
+.h-date-error:empty { min-height: 0; }
+
+.h-detail .set-remove { margin: 0 8px 8px; color: var(--danger); }
+.h-detail .ex-actions { flex-wrap: wrap; }
+
+.prog .h-action-icon { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.h-action-icon svg { width: 20px; height: 20px; }
+.prog .h-action.is-danger { color: var(--danger); background: none; }
+.prog .h-action.is-danger:active { background: var(--surface); }

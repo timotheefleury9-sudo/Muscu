@@ -15,13 +15,15 @@ interface Props {
   exercises: Exercise[]
   /** Exercices déjà présents dans le programme (signalés, pas interdits). */
   inTemplate: Set<string>
+  /** Libellé de ces exercices déjà présents. */
+  presentTag?: string
   onPick: (exercise: Exercise) => void
   onCreate: (exercise: Exercise) => void
   onClose: () => void
 }
 
 /** Plein écran : recherche, filtre par groupe, étirements et cardio masqués par défaut, création d'un exercice. */
-export default function ExercisePicker({ exercises, inTemplate, onPick, onCreate, onClose }: Props) {
+export default function ExercisePicker({ exercises, inTemplate, presentTag = 'Déjà dans le programme', onPick, onCreate, onClose }: Props) {
   const [query, setQuery] = useState('')
   const [group, setGroup] = useState<MuscleGroup | undefined>(undefined)
   const [includeAll, setIncludeAll] = useState(false)
@@ -101,7 +103,7 @@ export default function ExercisePicker({ exercises, inTemplate, onPick, onCreate
                       <span className="prg-result-sub">
                         {GROUP_LABEL[e.primaryGroup]} · {equipmentLabel(e.equipment)}
                         {e.custom && <span className="prg-tag">Perso</span>}
-                        {inTemplate.has(e.id) && <span className="prg-tag">Déjà dans le programme</span>}
+                        {inTemplate.has(e.id) && <span className="prg-tag">{presentTag}</span>}
                       </span>
                     </button>
                   </li>
