@@ -79,3 +79,8 @@ export function sessionHint(args: { suggestion: Suggestion; slot: Slot; incremen
   }
   return { tone: 'neutral', before: '', strong: next, after: ` quand les ${slot.sets} séries atteignent ${slot.repsMax} répétitions.` }
 }
+
+/** Une séance sans série validée ne compte pas (§7) : à la clôture, elle est supprimée plutôt que gardée. */
+export function hasValidatedSet(sets: Pick<SetLog, 'sessionId' | 'done'>[], sessionId: string): boolean {
+  return sets.some((s) => s.sessionId === sessionId && s.done)
+}

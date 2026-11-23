@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ADD_LOAD_HINT, isBlank, isExerciseComplete, nextUnfinished, plannedSets, propagateValues, sessionHint, stepWeight } from './sessionFlow'
+import { ADD_LOAD_HINT, hasValidatedSet, isBlank, isExerciseComplete, nextUnfinished, plannedSets, propagateValues, sessionHint, stepWeight } from './sessionFlow'
 import type { Suggestion } from './progression'
 import type { SetLog } from './types'
 
@@ -109,5 +109,14 @@ describe('sessionHint', () => {
     expect(sessionHint({ ...base, suggestion: { kind: 'sets', reason: 'deload', sets: [] }, sets })).toEqual({
       tone: 'warn', before: '', strong: 'Charge allégée de 10 %', after: ' après 3 séances sous la fourchette.',
     })
+  })
+})
+
+describe('hasValidatedSet', () => {
+  it('vrai seulement si une série de cette séance est validée', () => {
+    const sets = [{ sessionId: 'a', done: false }, { sessionId: 'b', done: true }]
+    expect(hasValidatedSet(sets, 'a')).toBe(false)
+    expect(hasValidatedSet(sets, 'b')).toBe(true)
+    expect(hasValidatedSet([], 'a')).toBe(false)
   })
 })

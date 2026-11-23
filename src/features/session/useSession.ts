@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { deleteSession, deleteSet, endSession, loadAll, saveSet, startSessionWithSets } from '../../data/repo'
+import { deleteSession, deleteSet, endSession, listSets, loadAll, saveSet, startSessionWithSets } from '../../data/repo'
 import { buildHistory } from '../../domain/history'
 import { suggestNext, type Suggestion } from '../../domain/progression'
 import { nextTemplateId, resolveOpenSession } from '../../domain/rotation'
-import { plannedSets, propagateValues } from '../../domain/sessionFlow'
+import { hasValidatedSet, plannedSets, propagateValues } from '../../domain/sessionFlow'
 import type { AppData, Exercise, Session, SetLog, TemplateExercise, WorkoutTemplate } from '../../domain/types'
 
 export interface SessionItem { te: TemplateExercise; exercise: Exercise; suggestion: Suggestion; sets: SetLog[] }
@@ -57,6 +57,12 @@ function buildItems(data: AppData, templateId: string, session: Session | null):
     })
 }
 
+/** Clôt la séance ; sans série validée, elle ne compte pas : supprimée avec ses séries brouillon. */
+async function closeSession(id: string, sets: Pick<SetLog, 'sessionId' | 'done'>[]): Promise<void> {
+  if (hasValidatedSet(sets, id)) await endSession(id)
+  else await deleteSession(id)
+}
+
 export function useSession() {
   const [state, setState] = useState<SessionState>(LOADING)
   const stateRef = useRef(state)
@@ -106,7 +112,7 @@ export function useSession() {
     let session: Session | null = null
     const decision = resolveOpenSession(open, new Date())
     if (open && (decision === 'autoclose' || !data.templates.some((t) => t.id === open.templateId))) {
-      await endSession(open.id)
+      await closeSession(open.id, data.sets)
       data = await loadAll()
     } else if (decision === 'resume') {
       session = open
@@ -230,7 +236,7 @@ export function useSession() {
   const finish = useCallback((): Promise<boolean> => {
     return enqueue(async () => {
       const id = stateRef.current.session?.id
-      if (id) await endSession(id)
+      if (id) await closeSession(id, await listSets(id))
       await load(() => false)
     })
   }, [enqueue, load])

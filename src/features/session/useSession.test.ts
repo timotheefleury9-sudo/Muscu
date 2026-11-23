@@ -105,4 +105,49 @@ describe('useSession', () => {
     tx.mockRestore()
     expect(await db.sessions.count()).toBe(1)
   })
+
+  it('terminer une séance sans série validée la supprime (séries brouillon comprises)', async () => {
+    const { result } = renderHook(() => useSession())
+    await waitFor(() => expect(result.current.state.status).toBe('ready'))
+    const set = result.current.state.items[0].sets[0]
+    act(() => { result.current.updateSet(0, set.id, { weight: 20 }) })
+    await pendingWrites()
+    expect(await db.sessions.count()).toBe(1)
+    await act(() => result.current.finish())
+    expect(await db.sessions.count()).toBe(0)
+    expect(await db.sets.count()).toBe(0)
+    expect(result.current.state.session).toBeNull()
+  })
+
+  it('terminer une séance avec une série validée la conserve', async () => {
+    const { result } = renderHook(() => useSession())
+    await waitFor(() => expect(result.current.state.status).toBe('ready'))
+    act(() => { result.current.toggleDone(0, result.current.state.items[0].sets[0].id) })
+    await act(() => result.current.finish())
+    const sessions = await db.sessions.toArray()
+    expect(sessions).toHaveLength(1)
+    expect(sessions[0].endedAt).not.toBeNull()
+  })
+
+  it('clôture automatique : séance sans série validée supprimée, séance avec série validée close', async () => {
+    const old = new Date(Date.now() - 2 * 86_400_000).toISOString()
+    const draft = (id: string, sessionId: string, done: boolean) => ({
+      id, sessionId, exerciseId: 'Dumbbell_Bench_Press', templateExerciseId: 'tpl-push-0', setIndex: 0,
+      plannedWeight: null, plannedReps: null, weight: 20, reps: 10, done,
+    })
+    await db.sessions.add({ id: 'vide', templateId: 'tpl-push', startedAt: old, endedAt: null })
+    await db.sets.add(draft('v0', 'vide', false))
+    const { result, unmount } = renderHook(() => useSession())
+    await waitFor(() => expect(result.current.state.status).toBe('ready'))
+    unmount()
+    expect(await db.sessions.count()).toBe(0)
+    expect(await db.sets.count()).toBe(0)
+
+    await db.sessions.add({ id: 'faite', templateId: 'tpl-push', startedAt: old, endedAt: null })
+    await db.sets.bulkAdd([draft('f0', 'faite', true), draft('f1', 'faite', false)])
+    const again = renderHook(() => useSession())
+    await waitFor(() => expect(again.result.current.state.status).toBe('ready'))
+    expect((await db.sessions.get('faite'))!.endedAt).not.toBeNull()
+    expect(await db.sets.count()).toBe(2)
+  })
 })
