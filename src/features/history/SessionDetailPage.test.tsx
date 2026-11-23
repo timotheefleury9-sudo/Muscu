@@ -196,6 +196,65 @@ describe('Détail d\'une séance', () => {
     expect(await db.sets.where('sessionId').equals(id).count()).toBe(0)
   })
 
+  it('échec de la suppression de la séance : bandeau, pas de navigation, séance toujours là', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.spyOn(db, 'transaction').mockRejectedValue(new DOMException('Quota dépassé', 'QuotaExceededError'))
+    renderAt(`/seances/${id}`)
+    await userEvent.click(await screen.findByRole('button', { name: 'Supprimer la séance' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Supprimer' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/^Enregistrement impossible/)
+    await pendingEditorWrites()
+    expect(visited.at(-1)).toBe(`/seances/${id}`)
+    expect(screen.getByRole('heading', { level: 1, name: 'Push' })).toBeInTheDocument()
+    vi.mocked(db.transaction).mockRestore()
+    expect(await db.sessions.get(id)).toBeDefined()
+  })
+
+  it('échec d\'une écriture suivie d\'autres en file : resynchronisé une fois la file vide, l\'écran suit la base', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    let release!: () => void
+    const gate = new Promise<void>((r) => { release = r })
+    vi.spyOn(db.sets, 'delete').mockImplementation((() => gate.then(() => { throw new DOMException('Quota dépassé', 'QuotaExceededError') })) as unknown as typeof db.sets.delete)
+    renderAt(`/seances/${id}`)
+    const card = await bench()
+    await userEvent.click(within(card).getByRole('button', { name: /^Série 1 : 80 kg/ }))
+    await userEvent.click(within(card).getByRole('button', { name: 'Supprimer la série 1' }))
+    // L'ancienne série 2 est maintenant la première : on la dévalide pendant que la suppression attend.
+    await waitFor(() => expect(within(card).getAllByRole('button', { name: /^Valider la série/ })).toHaveLength(2))
+    await userEvent.click(within(card).getByRole('button', { name: 'Valider la série 1', pressed: true }))
+    release()
+    expect(await screen.findByRole('alert')).toHaveTextContent(/^Enregistrement impossible/)
+    await pendingEditorWrites()
+    expect((await sets('Machine_Bench_Press')).map((s) => s.done)).toEqual([true, false, true])
+    await waitFor(() => expect(within(card).getAllByRole('button', { name: /^Valider la série/ }).map((b) => b.getAttribute('aria-pressed')))
+      .toEqual(['true', 'false', 'true']))
+  })
+
+  it('chargement impossible : message au lieu d\'un chargement sans fin', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.spyOn(db.sessions, 'toArray').mockRejectedValue(new DOMException('Base indisponible', 'UnknownError'))
+    renderAt(`/seances/${id}`)
+    expect(await screen.findByText('Impossible de charger cette séance.')).toBeInTheDocument()
+  })
+
+  it('retour juste après une modification : la liste relit la base après l\'écriture en cours', async () => {
+    let release!: () => void
+    const gate = new Promise<void>((r) => { release = r })
+    const real = db.sets.delete.bind(db.sets)
+    let calls = 0
+    vi.spyOn(db.sets, 'delete').mockImplementation(((key: string) => { calls++; return gate.then(() => real(key)) }) as unknown as typeof db.sets.delete)
+    renderAt('/progression/seances')
+    await userEvent.click(await screen.findByRole('button', { name: /^lun\. 16 nov\. · Push · 2 exercices · 5 séries/ }))
+    const card = await bench()
+    await userEvent.click(within(card).getByRole('button', { name: /^Série 1 : 80 kg/ }))
+    await userEvent.click(within(card).getByRole('button', { name: 'Supprimer la série 1' }))
+    await waitFor(() => expect(calls).toBe(1))
+    await userEvent.click(screen.getByRole('button', { name: 'Toutes mes séances' }))
+    await screen.findByRole('heading', { level: 1, name: 'Toutes mes séances' })
+    release()
+    expect(await screen.findByRole('button', { name: /^lun\. 16 nov\. · Push · 2 exercices · 4 séries/ })).toBeInTheDocument()
+  })
+
   it('séance vidée : reste affichée', async () => {
     renderAt(`/seances/${id}`)
     for (const name of ['Pec deck', 'Développé couché machine']) {

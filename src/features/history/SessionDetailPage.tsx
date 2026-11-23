@@ -129,6 +129,14 @@ export default function SessionDetailPage() {
 
   if (state.status === 'open') return <Navigate to="/" replace />
   if (state.status === 'loading') return <ProgressScreen detail busy>{back}</ProgressScreen>
+  if (state.status === 'error') {
+    return (
+      <ProgressScreen detail>
+        {back}
+        <div className="p-card p-empty"><strong>Impossible de charger cette séance.</strong><p>Reviens en arrière puis réessaie.</p></div>
+      </ProgressScreen>
+    )
+  }
   if (state.status === 'missing' || !state.session || !state.data) {
     return (
       <ProgressScreen detail>

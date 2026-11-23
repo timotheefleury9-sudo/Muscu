@@ -5,8 +5,8 @@ import { appendedSet, canMoveTo, moveSessionTimes } from '../../domain/sessionLo
 import type { AppData, Exercise, Session, SetLog } from '../../domain/types'
 
 export interface EditorState {
-  /** open : séance en cours (non modifiable ici) ; missing : séance introuvable. */
-  status: 'loading' | 'missing' | 'open' | 'ready'
+  /** open : séance en cours (non modifiable ici) ; missing : séance introuvable ; error : lecture de la base impossible. */
+  status: 'loading' | 'missing' | 'open' | 'ready' | 'error'
   /** Exercices, programmes et lignes de programme (les séances et séries des autres jours ne servent pas). */
   data: Pick<AppData, 'exercises' | 'templates' | 'templateExercises'> | null
   session: Session | null
@@ -62,26 +62,42 @@ export function useSessionEditor(id: string) {
     // Les écritures d'un passage précédent sur l'écran doivent être visibles au chargement.
     pendingEditorWrites()
       .then(load)
-      .catch((e: unknown) => console.error('Chargement de la séance échoué', e))
+      .catch((e: unknown) => {
+        console.error('Chargement de la séance échoué', e)
+        commit({ ...LOADING, status: 'error' })
+      })
     return () => { alive.current = false }
-  }, [load])
+  }, [load, commit])
 
-  /** Écriture en file ; résout à true si elle a abouti. */
+  /** Un échec attend sa resynchronisation (faite quand la file est vide). */
+  const dirty = useRef(false)
+
+  /**
+   * Écriture en file ; résout à true si elle a abouti. Après un échec, la resynchronisation n'a lieu qu'une fois les
+   * écritures déjà en file terminées : sinon elles s'appliqueraient en base après coup sans apparaître à l'écran.
+   */
   const enqueue = useCallback((job: () => Promise<void>): Promise<boolean> => {
-    const run = queue.current.then(async () => {
+    const run: Promise<boolean> = queue.current.then(async () => {
+      let ok = true
       try {
         await job()
-        return true
       } catch (e) {
         console.error('Enregistrement de la séance échoué', e)
+        ok = false
+        dirty.current = true
         commit({ ...stateRef.current, saveError: true })
+      }
+      if (dirty.current && queue.current === run) {
+        dirty.current = false
         try {
           await load()
         } catch (e2) {
           console.error('Resynchronisation de la séance échouée', e2)
         }
-        return false
+        // Une modification faite pendant la relecture a pu être écrasée : la dernière de la file resynchronisera.
+        if (queue.current !== run) dirty.current = true
       }
+      return ok
     })
     queue.current = run
     inFlight.add(run)

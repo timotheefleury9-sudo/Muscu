@@ -1,7 +1,10 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../../data/db'
-import { saveExercise } from '../../data/repo'
+import { loadAll, saveExercise, saveSet, startSession } from '../../data/repo'
+import { buildHistory } from '../../domain/history'
+import { suggestNext } from '../../domain/progression'
+import { pendingEditorWrites, useSessionEditor } from '../history/useSessionEditor'
 import { seedIfEmpty } from '../../data/seed'
 import { pendingWrites, useSession } from './useSession'
 
@@ -14,6 +17,7 @@ beforeEach(async () => {
 afterEach(async () => {
   cleanup()
   await pendingWrites()
+  await pendingEditorWrites()
   vi.restoreAllMocks()
 })
 
@@ -149,5 +153,39 @@ describe('useSession', () => {
     await waitFor(() => expect(again.result.current.state.status).toBe('ready'))
     expect((await db.sessions.get('faite'))!.endedAt).not.toBeNull()
     expect(await db.sets.count()).toBe(2)
+  })
+
+  it('au montage, attend les écritures de la correction d\'une séance passée avant de charger', async () => {
+    const past = await startSession('tpl-push')
+    for (const setIndex of [0, 1, 2]) {
+      await saveSet({
+        id: `b${setIndex}`, sessionId: past.id, exerciseId: 'Machine_Bench_Press', templateExerciseId: 'tpl-push-1', setIndex,
+        plannedWeight: 80, plannedReps: 10, weight: 80, reps: 10, done: true,
+      })
+    }
+    await db.sessions.update(past.id, { startedAt: new Date(Date.now() - 2 * 86400_000).toISOString(), endedAt: new Date(Date.now() - 2 * 86400_000 + 3600_000).toISOString() })
+    const editor = renderHook(() => useSessionEditor(past.id))
+    await waitFor(() => expect(editor.result.current.state.status).toBe('ready'))
+    let release!: () => void
+    const gate = new Promise<void>((r) => { release = r })
+    const real = db.sets.put.bind(db.sets)
+    let calls = 0
+    vi.spyOn(db.sets, 'put').mockImplementation(((...a: Parameters<typeof db.sets.put>) => { calls++; return gate.then(() => real(...a)) }) as unknown as typeof db.sets.put)
+    act(() => { editor.result.current.updateSet('b0', { weight: 100 }) })
+    await waitFor(() => expect(calls).toBe(1))
+    editor.unmount()
+
+    const { result } = renderHook(() => useSession())
+    release()
+    await waitFor(() => expect(result.current.state.status).toBe('ready'))
+    vi.mocked(db.sets.put).mockRestore()
+    act(() => { result.current.selectTemplate('tpl-push') })
+    const item = result.current.state.items.find((i) => i.te.id === 'tpl-push-1')!
+    const data = await loadAll()
+    const expected = suggestNext(buildHistory(data, 'Machine_Bench_Press'), item.te, item.exercise)
+    expect(item.suggestion).toEqual(expected)
+    // Sans attente, la proposition partirait des données d'avant la correction.
+    const stale = { ...data, sets: data.sets.map((x) => (x.id === 'b0' ? { ...x, weight: 80 } : x)) }
+    expect(suggestNext(buildHistory(stale, 'Machine_Bench_Press'), item.te, item.exercise)).not.toEqual(expected)
   })
 })

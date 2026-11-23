@@ -5,6 +5,7 @@ import { suggestNext, type Suggestion } from '../../domain/progression'
 import { nextTemplateId, resolveOpenSession } from '../../domain/rotation'
 import { hasValidatedSet, plannedSets, propagateValues } from '../../domain/sessionFlow'
 import type { AppData, Exercise, Session, SetLog, TemplateExercise, WorkoutTemplate } from '../../domain/types'
+import { pendingEditorWrites } from '../history/useSessionEditor'
 
 export interface SessionItem { te: TemplateExercise; exercise: Exercise; suggestion: Suggestion; sets: SetLog[] }
 
@@ -135,7 +136,8 @@ export function useSession() {
     // Au (re)montage, attendre les écritures d'une instance précédente (ex. création de séance en cours) :
     // sinon la séance encore non écrite serait invisible et une seconde serait créée.
     // (Pas dans load : elle s'exécute aussi depuis la file d'écritures, qui s'attendrait elle-même.)
-    pendingWrites()
+    // Idem pour une correction de séance passée encore en cours d'écriture (propositions à jour).
+    Promise.all([pendingWrites(), pendingEditorWrites()])
       .then(() => load(() => cancelled))
       .catch((e: unknown) => console.error('Chargement de la séance échoué', e))
     return () => { cancelled = true }
