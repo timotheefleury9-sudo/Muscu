@@ -61,7 +61,10 @@ describe('seedIfEmpty', () => {
   it('rattache le soulevé de terre aux ischios et les tractions au dos (poids du corps)', async () => {
     await seedIfEmpty()
     const exos = await listExercises()
-    expect(exos.find((e) => e.name === 'Soulevé de terre barre')!.primaryGroup).toBe('ischios')
+    const deadlift = exos.find((e) => e.name === 'Soulevé de terre barre')!
+    expect(deadlift.primaryGroup).toBe('ischios')
+    expect(deadlift.secondaryGroups).toContain('dos')
+    expect(deadlift.secondaryGroups).not.toContain('ischios')
     expect(exos.find((e) => e.name === 'Tractions')).toMatchObject({ bodyweight: true, primaryGroup: 'dos' })
   })
 
@@ -70,6 +73,14 @@ describe('seedIfEmpty', () => {
     const exos = await listExercises()
     expect(exos.length).toBeGreaterThan(800)
     expect(exos.every((e) => e.name.trim().length > 0)).toBe(true)
+  })
+
+  it('le catalogue porte la catégorie free-exercise-db (étirements, cardio…)', async () => {
+    await seedIfEmpty()
+    const exos = await listExercises()
+    expect(exos.find((e) => e.id === 'Barbell_Squat')!.category).toBe('strength')
+    expect(exos.find((e) => e.id === '90_90_Hamstring')!.category).toBe('stretching')
+    expect(exos.filter((e) => !e.custom).every((e) => typeof e.category === 'string')).toBe(true)
   })
 
   it('un second appel ne duplique rien', async () => {

@@ -3,6 +3,7 @@ import { db } from './db'
 import {
   deleteTemplateExercise, getOpenSession, endSession, listSets, listTemplateExercises,
   loadAll, saveSet, saveTemplate, saveTemplateExercise, startSession, deleteSet, listTemplates, deleteTemplate, deleteSession, startSessionWithSets,
+  loadPrograms, saveTemplateExercises,
 } from './repo'
 import type { SetLog, TemplateExercise } from '../domain/types'
 
@@ -78,5 +79,28 @@ describe('repo', () => {
     put.mockRestore()
     expect(await getOpenSession()).toBeUndefined()
     expect((await loadAll()).sessions).toHaveLength(1)
+  })
+
+  it('loadPrograms lit exercices, programmes (ordre de rotation) et lignes, sans les séances', async () => {
+    await saveTemplate({ id: 't2', name: 'Pull', rotationOrder: 1 })
+    await saveTemplate({ id: 't1', name: 'Push', rotationOrder: 0 })
+    await saveTemplateExercise(te({ id: 'a', templateId: 't1' }))
+    await db.exercises.put({ id: 'e1', name: 'X', primaryGroup: 'dos', secondaryGroups: [], equipment: 'other', kind: 'compound', increment: 2.5, bodyweight: false, custom: true })
+    const p = await loadPrograms()
+    expect(p.templates.map((t) => t.id)).toEqual(['t1', 't2'])
+    expect(p.templateExercises.map((x) => x.id)).toEqual(['a'])
+    expect(p.exercises.map((x) => x.id)).toEqual(['e1'])
+  })
+
+  it('saveTemplateExercises écrit toutes les lignes ensemble, ou aucune', async () => {
+    await saveTemplateExercises([te({ id: 'a', order: 0 }), te({ id: 'b', order: 1 })])
+    expect((await listTemplateExercises('t1')).map((x) => x.id)).toEqual(['a', 'b'])
+    await saveTemplateExercises([te({ id: 'a', order: 1 }), te({ id: 'b', order: 0 })])
+    expect((await listTemplateExercises('t1')).map((x) => x.id)).toEqual(['b', 'a'])
+
+    const put = vi.spyOn(db.templateExercises, 'bulkPut').mockRejectedValueOnce(new Error('quota'))
+    await expect(saveTemplateExercises([te({ id: 'a', order: 0 }), te({ id: 'b', order: 1 })])).rejects.toThrow('quota')
+    put.mockRestore()
+    expect((await listTemplateExercises('t1')).map((x) => x.id)).toEqual(['b', 'a'])
   })
 })

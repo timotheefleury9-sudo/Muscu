@@ -8,6 +8,7 @@ interface SourceExercise {
   id: string
   name: string
   mechanic: string | null
+  category: string
   equipment: string | null
   primaryMuscles: string[]
   secondaryMuscles: string[]
@@ -51,6 +52,7 @@ const out: Exercise[] = source.map((s) => {
     increment: equipment === 'dumbbell' ? 2 : 2.5,
     bodyweight: equipment === 'body only',
     custom: false,
+    category: s.category,
   }
 })
 

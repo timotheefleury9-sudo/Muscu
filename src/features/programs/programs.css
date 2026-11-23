@@ -1,0 +1,158 @@
+/* Programmes — pas de maquette : langage visuel de docs/mockups (cartes, pilules, .num), jetons de theme.css.
+   Déplacements et hauteurs animés par Framer Motion ; seules les couleurs restent en CSS. */
+.prg button, .prg-picker button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+.prg button:focus-visible, .prg-picker button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.prg button:disabled, .prg-picker button:disabled { cursor: default; }
+.prg ul, .prg-picker ul { list-style: none; margin: 0; padding: 0; }
+
+.prg .prg-title { font-size: 34px; font-weight: 800; font-stretch: 85%; letter-spacing: -0.02em; margin: 8px 4px 6px; line-height: 1.05; }
+.prg-lead { color: var(--text-muted); font-size: 15px; margin: 0 4px 16px; }
+.prg-muted { color: var(--text-muted); font-size: 14px; line-height: 1.4; margin: 10px 4px; }
+.prg .prg-back, .prg-picker .prg-back { min-height: 44px; display: inline-flex; align-items: center; gap: 2px; padding: 0 10px 0 0; font-weight: 600; font-size: 16px; color: var(--text-muted); }
+.prg-back svg { width: 22px; height: 22px; }
+.prg-chev { width: 16px; height: 16px; color: var(--faint); flex: none; }
+
+/* Liste des programmes */
+.prg-cards { display: flex; flex-direction: column; gap: 8px; }
+.prg .prg-card {
+  width: 100%; display: flex; align-items: center; gap: 12px; min-height: 76px; padding: 14px 18px;
+  background: var(--surface); border-radius: var(--radius-card); transition: background-color var(--dur) var(--ease);
+}
+.prg .prg-card:active { background: var(--surface-2); }
+.prg-card-main { flex: 1; min-width: 0; }
+.prg-card-name { display: block; font-size: 21px; font-weight: 700; line-height: 1.2; }
+.prg-card-sub { display: block; color: var(--text-muted); font-size: 14px; margin-top: 3px; }
+
+.prg .prg-add {
+  width: 100%; min-height: 54px; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-weight: 700; font-size: 17px;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+.prg .prg-add:active { background: var(--surface-2); }
+.prg-add svg { width: 20px; height: 20px; }
+
+/* Éditeur */
+.prg-name-input {
+  display: block; width: 100%; margin: 4px 0 2px; padding: 4px; border: 0; border-radius: 10px; background: transparent; color: var(--text);
+  font-family: inherit; font-size: 34px; font-weight: 800; font-stretch: 85%; letter-spacing: -0.02em; line-height: 1.1;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+.prg-name-input:focus { outline: none; background: var(--surface); }
+
+.prg-list { display: flex; flex-direction: column; gap: 8px; }
+.prg-row { position: relative; background: var(--surface); border-radius: var(--radius-card); overflow: hidden; transition: background-color var(--dur) var(--ease); }
+.prg-row-head { display: flex; align-items: center; min-height: 68px; }
+.prg .prg-handle { width: 44px; align-self: stretch; display: grid; place-items: center; flex: none; color: var(--faint); touch-action: none; }
+.prg-handle svg { width: 20px; height: 20px; }
+.prg .prg-row-main { flex: 1; min-width: 0; min-height: 68px; padding: 12px 16px 12px 0; display: flex; flex-direction: column; justify-content: center; }
+.prg-row-name { font-size: 16px; font-weight: 600; line-height: 1.25; }
+.prg-row-sub { color: var(--text-muted); font-size: 13px; margin-top: 3px; }
+.prg-row-sub .num { font-size: 14px; font-weight: 600; color: var(--text); }
+.prg-row-body { overflow: hidden; }
+
+.prg-steppers { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding: 0 10px 6px; }
+.prg-stepper { background: var(--surface-2); border-radius: var(--radius-control); padding: 8px 2px 4px; box-shadow: inset 0 0 0 1.5px transparent; transition: box-shadow var(--dur) var(--ease); }
+.prg-stepper.is-invalid { box-shadow: inset 0 0 0 1.5px var(--danger); }
+.prg-stepper-lab { display: block; text-align: center; font-size: 13px; color: var(--text-muted); }
+.prg-stepper-row { display: flex; align-items: center; justify-content: space-between; }
+.prg .prg-stepper button {
+  width: 44px; height: 48px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  transition: background-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease);
+}
+.prg .prg-stepper button:active:not(:disabled) { background: var(--surface); transform: scale(0.92); }
+.prg .prg-stepper button:disabled { opacity: 0.3; }
+.prg-stepper button svg { width: 20px; height: 20px; }
+.prg-stepper input {
+  flex: 1; min-width: 0; width: 100%; height: 48px; padding: 0; border: 0; border-radius: 8px;
+  background: transparent; color: var(--text); text-align: center;
+  font-family: inherit; font-size: 28px; line-height: 48px; /* >= 16 px : pas de zoom iOS au focus */
+}
+.prg-stepper input:focus { outline: none; background: var(--surface); }
+.prg-error { margin: 4px 14px 2px; color: var(--danger); font-size: 14px; line-height: 1.35; }
+
+.prg-row-actions { display: flex; gap: 4px; padding: 4px 8px 8px; }
+.prg .prg-text-btn { min-height: 44px; padding: 0 10px; font-weight: 600; font-size: 15px; color: var(--text); transition: opacity var(--dur-fast) var(--ease); }
+.prg .prg-text-btn:disabled { opacity: 0.35; }
+.prg .prg-text-btn.danger { color: var(--danger); }
+.prg-row-actions .danger { margin-left: auto; }
+
+.prg-empty { background: var(--surface); border-radius: var(--radius-card); padding: 20px 18px; }
+.prg-empty strong { display: block; font-size: 17px; margin-bottom: 4px; }
+.prg-empty p { margin: 0; color: var(--text-muted); font-size: 15px; line-height: 1.4; }
+
+.prg-danger-zone { margin: 28px 0 8px; text-align: center; }
+.prg-danger-zone .prg-muted { margin-top: 0; }
+
+/* Feuille de confirmation : action destructive */
+.sheet .danger-btn {
+  display: block; width: 100%; min-height: 54px; margin-bottom: 8px; border-radius: var(--radius-pill);
+  background: var(--danger); color: var(--danger-contrast); font-weight: 700; font-size: 17px;
+}
+
+/* Sélecteur d'exercices (plein écran) */
+.prg-picker {
+  position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; background: var(--bg);
+  padding: var(--safe-top) var(--safe-right) 0 var(--safe-left);
+}
+.prg-picker-head { display: flex; justify-content: space-between; align-items: center; padding: 4px 12px 0 16px; min-height: 52px; }
+.prg-picker .prg-close { min-height: 44px; padding: 0 8px; font-weight: 700; font-size: 16px; }
+.prg-picker-title { font-size: 28px; font-weight: 800; font-stretch: 85%; letter-spacing: -0.02em; margin: 0 20px 12px; }
+.prg-picker-sub { font-size: 17px; font-weight: 700; margin: 4px 4px 12px; }
+.prg-picker-tools { padding: 0 16px 8px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--border); }
+.prg-picker-body { flex: 1; overflow-y: auto; padding: 8px 16px calc(var(--safe-bottom) + 24px); -webkit-overflow-scrolling: touch; }
+
+.prg-input {
+  width: 100%; min-height: 48px; padding: 0 16px; border: 0; border-radius: var(--radius-control);
+  background: var(--surface); color: var(--text); font-family: inherit; font-size: 17px; /* >= 16 px : pas de zoom iOS */
+  box-shadow: inset 0 0 0 1.5px transparent; transition: box-shadow var(--dur-fast) var(--ease);
+}
+.prg-input::placeholder { color: var(--faint); }
+.prg-input:focus { outline: none; box-shadow: inset 0 0 0 1.5px var(--text-muted); }
+.prg-input[aria-invalid='true'] { box-shadow: inset 0 0 0 1.5px var(--danger); }
+.prg-input.short { width: 120px; font-size: 22px; }
+.prg-input::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+.prg-pills { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
+.prg-pills::-webkit-scrollbar { display: none; }
+.prg-pills.wrap { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; }
+.prg-picker .prg-pill {
+  flex: none; min-height: 44px; padding: 0 16px; border-radius: var(--radius-pill); font-weight: 600; font-size: 15px;
+  color: var(--text-muted); background: var(--surface); white-space: nowrap;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.prg-picker .prg-pill[aria-pressed='true'], .prg-picker .prg-pill[aria-checked='true'] { background: var(--accent); color: var(--accent-contrast); }
+
+.prg-picker .prg-switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 52px; font-size: 16px; font-weight: 500; }
+.prg-picker .prg-switch-row.compact { min-height: 44px; font-size: 15px; color: var(--text-muted); }
+.prg-switch-row small { display: block; font-size: 13px; color: var(--text-muted); font-weight: 400; margin-top: 2px; }
+.prg-switch { flex: none; width: 50px; height: 30px; border-radius: 15px; background: var(--surface-2); position: relative; transition: background-color var(--dur) var(--ease); }
+.prg-switch i { position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: var(--text-muted); transition: transform var(--dur) var(--ease), background-color var(--dur) var(--ease); }
+[aria-checked='true'] > .prg-switch { background: var(--success); }
+[aria-checked='true'] > .prg-switch i { transform: translateX(20px); background: var(--success-contrast); }
+
+.prg-picker .prg-create { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 0 4px; font-weight: 700; font-size: 16px; }
+.prg-create-icon { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); }
+.prg-create-icon svg { width: 18px; height: 18px; }
+
+.prg-results li + li { border-top: 1px solid var(--border); }
+.prg-picker .prg-result { width: 100%; min-height: 60px; padding: 10px 4px; display: flex; flex-direction: column; justify-content: center; border-radius: 10px; transition: background-color var(--dur-fast) var(--ease); }
+.prg-picker .prg-result:active { background: var(--surface); }
+.prg-result-name { font-size: 16px; font-weight: 600; line-height: 1.25; }
+.prg-result-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.prg-tag { display: inline-block; font-size: 12px; font-weight: 600; color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 0 6px; margin-left: 6px; }
+
+/* Formulaire d'exercice personnalisé */
+.prg-form { display: flex; flex-direction: column; gap: 18px; }
+.prg-field { display: flex; flex-direction: column; gap: 8px; }
+.prg-field-lab { font-size: 14px; font-weight: 600; color: var(--text-muted); margin: 0 4px; }
+.prg-field-error { margin: 0 4px; color: var(--danger); font-size: 14px; line-height: 1.35; }
+.prg-segment { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--surface); border-radius: var(--radius-pill); }
+.prg-picker .prg-segment button {
+  min-height: 44px; border-radius: var(--radius-pill); text-align: center; font-weight: 600; font-size: 15px; color: var(--text-muted);
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.prg-picker .prg-segment button[aria-checked='true'] { background: var(--accent); color: var(--accent-contrast); }
+.prg-picker .prg-primary {
+  width: 100%; min-height: 54px; margin-top: 4px; border-radius: var(--radius-pill); text-align: center;
+  background: var(--accent); color: var(--accent-contrast); font-weight: 700; font-size: 17px;
+}

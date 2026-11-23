@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { NavLink, Route, Routes } from 'react-router-dom'
 import SessionPage from './features/session/SessionPage'
 import ProgramsPage from './features/programs/ProgramsPage'
+import TemplateEditor from './features/programs/TemplateEditor'
 import WeekSummaryPage from './features/progress/WeekSummaryPage'
 import MuscleDetailPage from './features/progress/MuscleDetailPage'
 import SettingsPage from './features/settings/SettingsPage'
@@ -34,6 +35,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<SessionPage />} />
           <Route path="/programmes" element={<ProgramsPage />} />
+          <Route path="/programmes/:id" element={<TemplateEditor />} />
           <Route path="/progression" element={<WeekSummaryPage />} />
           <Route path="/progression/muscle/:group" element={<MuscleDetailPage />} />
           <Route path="/progression/exercice/:id" element={

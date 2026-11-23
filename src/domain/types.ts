@@ -1,5 +1,5 @@
 export type MuscleGroup = 'pectoraux'|'dos'|'epaules'|'biceps'|'triceps'|'quadriceps'|'ischios'|'fessiers'|'mollets'|'abdos'
-export interface Exercise { id: string; name: string; primaryGroup: MuscleGroup; secondaryGroups: MuscleGroup[]; equipment: string; kind: 'compound'|'isolation'; increment: number; bodyweight: boolean; custom: boolean }
+export interface Exercise { id: string; name: string; primaryGroup: MuscleGroup; secondaryGroups: MuscleGroup[]; equipment: string; kind: 'compound'|'isolation'; increment: number; bodyweight: boolean; custom: boolean; /** Catégorie free-exercise-db (strength, stretching, cardio…) ; absente pour les exercices personnalisés et les catalogues installés avant son ajout. */ category?: string }
 export interface WorkoutTemplate { id: string; name: string; rotationOrder: number }
 export interface TemplateExercise { id: string; templateId: string; exerciseId: string; order: number; sets: number; repsMin: number; repsMax: number; restSec: number }
 export interface Session { id: string; templateId: string; startedAt: string; endedAt: string | null } // ISO

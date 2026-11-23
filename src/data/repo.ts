@@ -16,6 +16,8 @@ export const deleteTemplate = (id: string): Promise<void> =>
 export const listTemplateExercises = async (templateId: string): Promise<TemplateExercise[]> =>
   (await db.templateExercises.where('templateId').equals(templateId).toArray()).sort((a, b) => a.order - b.order)
 export const saveTemplateExercise = async (te: TemplateExercise): Promise<void> => { await db.templateExercises.put(te) }
+/** Plusieurs lignes en une écriture (réordonnancement) : toutes ou aucune. */
+export const saveTemplateExercises = async (tes: TemplateExercise[]): Promise<void> => { await db.templateExercises.bulkPut(tes) }
 /** Ne touche à aucun SetLog. */
 export const deleteTemplateExercise = (id: string): Promise<void> => db.templateExercises.delete(id)
 
@@ -49,6 +51,12 @@ export const listSets = async (sessionId: string): Promise<SetLog[]> =>
   (await db.sets.where('sessionId').equals(sessionId).toArray()).sort((a, b) => a.setIndex - b.setIndex)
 export const saveSet = async (s: SetLog): Promise<void> => { await db.sets.put(s) }
 export const deleteSet = (id: string): Promise<void> => db.sets.delete(id)
+
+/** Données de l'onglet Programmes (sans les séances ni les séries). */
+export async function loadPrograms(): Promise<Pick<AppData, 'exercises' | 'templates' | 'templateExercises'>> {
+  const [exercises, templates, templateExercises] = await Promise.all([listExercises(), listTemplates(), db.templateExercises.toArray()])
+  return { exercises, templates, templateExercises }
+}
 
 export async function loadAll(): Promise<AppData> {
   const [exercises, templates, templateExercises, sessions, sets] = await Promise.all([
