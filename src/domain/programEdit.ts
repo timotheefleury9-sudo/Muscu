@@ -61,20 +61,28 @@ export interface CustomExerciseInput {
 export type CustomExerciseErrors = Partial<Record<'name' | 'group' | 'increment', string>>
 export type CustomExerciseResult = { ok: true; exercise: Omit<Exercise, 'id'> } | { ok: false; errors: CustomExerciseErrors }
 
+const INCREMENT_ERROR = 'Saisis un incrément supérieur à 0 (ex. 2,5).'
+
+/** Incrément saisi comme un poids (« 2,5 » ou « 2.5 »), strictement positif. Il vaut pour l'exercice partout. */
+export function validateIncrement(input: string): { ok: true; value: number } | { ok: false; error: string } {
+  const value = parseWeight(input)
+  return value === null || value <= 0 ? { ok: false, error: INCREMENT_ERROR } : { ok: true, value }
+}
+
 /** Nom et groupe obligatoires, incrément > 0. */
 export function validateCustomExercise(input: CustomExerciseInput): CustomExerciseResult {
   const errors: CustomExerciseErrors = {}
   const name = input.name.trim().replace(/\s+/g, ' ')
   if (!name) errors.name = 'Donne un nom à l\'exercice.'
   if (!input.group) errors.group = 'Choisis un groupe musculaire.'
-  const increment = parseWeight(input.increment)
-  if (increment === null || increment <= 0) errors.increment = 'Saisis un incrément supérieur à 0 (ex. 2,5).'
-  if (Object.keys(errors).length > 0 || !input.group || increment === null) return { ok: false, errors }
+  const inc = validateIncrement(input.increment)
+  if (!inc.ok) errors.increment = inc.error
+  if (Object.keys(errors).length > 0 || !input.group || !inc.ok) return { ok: false, errors }
   return {
     ok: true,
     exercise: {
       name, primaryGroup: input.group, secondaryGroups: [], equipment: input.bodyweight ? 'body only' : 'other',
-      kind: input.kind, increment, bodyweight: input.bodyweight, custom: true,
+      kind: input.kind, increment: inc.value, bodyweight: input.bodyweight, custom: true,
     },
   }
 }

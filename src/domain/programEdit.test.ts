@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canStep, defaultSlot, moveItem, nextOrder, stepSlot, nextRotationOrder, validateCustomExercise, validateSlot, type CustomExerciseInput } from './programEdit'
+import { canStep, defaultSlot, moveItem, nextOrder, stepSlot, nextRotationOrder, validateCustomExercise, validateIncrement, validateSlot, type CustomExerciseInput } from './programEdit'
 import type { Exercise } from './types'
 
 describe('validateSlot', () => {
@@ -66,6 +66,19 @@ describe('validateCustomExercise', () => {
       expect(!r.ok && r.errors.increment, increment).toBeTruthy()
     }
     expect(validateCustomExercise({ ...base, increment: '2.5' }).ok).toBe(true)
+  })
+})
+
+describe('validateIncrement', () => {
+  it('accepte virgule ou point, strictement positif', () => {
+    expect(validateIncrement('2,5')).toEqual({ ok: true, value: 2.5 })
+    expect(validateIncrement(' 1.25 ')).toEqual({ ok: true, value: 1.25 })
+    expect(validateIncrement('5')).toEqual({ ok: true, value: 5 })
+  })
+  it('refuse zéro, vide, texte, négatif', () => {
+    for (const s of ['0', '0,0', '', 'abc', '-2', '2,5,5']) {
+      expect(validateIncrement(s), s).toEqual({ ok: false, error: 'Saisis un incrément supérieur à 0 (ex. 2,5).' })
+    }
   })
 })
 

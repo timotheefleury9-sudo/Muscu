@@ -120,6 +120,30 @@ describe('TemplateEditor', () => {
     expect(within(row).getByRole('button', { name: 'Moins de séries' })).toBeDisabled()
   })
 
+  it('l\'incrément de l\'exercice se modifie depuis la ligne (virgule) ; une valeur invalide est refusée', async () => {
+    const user = userEvent.setup()
+    renderAt('/programmes/tpl-legs')
+    await user.click(await screen.findByRole('button', { name: /^Squat barre/ }))
+    const row = screen.getByRole('listitem', { name: 'Squat barre' })
+    const inc = within(row).getByRole('textbox', { name: 'Incrément (kg)' })
+    expect(inc).toHaveValue('2,5')
+    expect(within(row).getByText(/partout/)).toBeInTheDocument()
+
+    await user.clear(inc)
+    await user.type(inc, '0')
+    await user.tab()
+    expect(within(row).getByText('Saisis un incrément supérieur à 0 (ex. 2,5).')).toBeInTheDocument()
+    await pendingProgramWrites()
+    expect((await db.exercises.get('Barbell_Squat'))!.increment).toBe(2.5)
+
+    await user.clear(inc)
+    await user.type(inc, '1,25')
+    await waitFor(async () => expect((await db.exercises.get('Barbell_Squat'))!.increment).toBe(1.25))
+    await user.tab()
+    expect(within(row).queryByRole('alert')).not.toBeInTheDocument()
+    expect(inc).toHaveValue('1,25')
+  })
+
   it('retirer un exercice demande confirmation et conserve l\'historique', async () => {
     const s = await startSession('tpl-push')
     await saveSet({

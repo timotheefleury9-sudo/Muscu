@@ -167,6 +167,7 @@ export default function TemplateEditor() {
               open={openId === te.id}
               onToggle={() => setOpenId((o) => (o === te.id ? null : te.id))}
               onChange={(slot) => p.updateSlot(te, slot)}
+              onIncrementChange={(ex, increment) => p.updateIncrement(ex, increment)}
               onMove={(dir) => p.reorder(moveItem(saved, i, dir))}
               onRemove={() => askRemove(te, exercises.get(te.exerciseId))}
               onDragEnd={finishDrag}

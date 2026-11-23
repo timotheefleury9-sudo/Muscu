@@ -1,7 +1,7 @@
 import { useEffect, useId, useState, type PointerEvent } from 'react'
 import { AnimatePresence, Reorder, motion, useDragControls } from 'framer-motion'
-import { parseReps } from '../../domain/parseWeight'
-import { canStep, stepSlot, validateSlot, type Slot } from '../../domain/programEdit'
+import { formatWeight, parseReps } from '../../domain/parseWeight'
+import { canStep, stepSlot, validateIncrement, validateSlot, type Slot } from '../../domain/programEdit'
 import type { Exercise, TemplateExercise } from '../../domain/types'
 import { GROUP_LABEL } from '../progress/labels'
 import { IconMinus, IconPlus } from './parts'
@@ -35,12 +35,13 @@ interface Props {
   open: boolean
   onToggle: () => void
   onChange: (slot: Slot) => void
+  onIncrementChange: (exercise: Exercise, increment: number) => void
   onMove: (dir: -1 | 1) => void
   onRemove: () => void
   onDragEnd: () => void
 }
 
-export default function TemplateExerciseRow({ domId, te, exercise, index, count, open, onToggle, onChange, onMove, onRemove, onDragEnd }: Props) {
+export default function TemplateExerciseRow({ domId, te, exercise, index, count, open, onToggle, onChange, onIncrementChange, onMove, onRemove, onDragEnd }: Props) {
   const id = useId()
   const drag = useDragControls()
   const saved = slotOf(te)
@@ -67,6 +68,24 @@ export default function TemplateExerciseRow({ domId, te, exercise, index, count,
     setDraft(next)
     const slot = parseDraft(next)
     if (Object.keys(validateSlot(slot)).length === 0 && !same(slot, saved)) onChange(slot)
+  }
+
+  // Incrément : enregistré dès qu'il est valide ; l'erreur ne s'affiche qu'en quittant le champ (« 2, » en cours de saisie).
+  const [incDraft, setIncDraft] = useState<string | null>(null)
+  const [incTouched, setIncTouched] = useState(false)
+  const incShown = incDraft ?? (exercise ? formatWeight(exercise.increment) : '')
+  const incCheck = validateIncrement(incShown)
+  const incError = incDraft !== null && incTouched && !incCheck.ok ? incCheck.error : null
+
+  useEffect(() => {
+    if (!open) { setIncDraft(null); setIncTouched(false) }
+  }, [open])
+
+  const editIncrement = (text: string) => {
+    setIncDraft(text)
+    setIncTouched(false)
+    const r = validateIncrement(text)
+    if (exercise && r.ok && r.value !== exercise.increment) onIncrementChange(exercise, r.value)
   }
 
   const step = (f: Field, dir: 1 | -1) => edit({ ...shown, [f]: String(stepSlot(filled, f, dir)) })
@@ -145,6 +164,31 @@ export default function TemplateExerciseRow({ domId, te, exercise, index, count,
                 {[...new Set(FIELDS.map((f) => errors[f]).filter(Boolean))].join(' ')}
               </p>
             )}
+            {exercise && (
+              <div className={`prg-inc${incError ? ' is-invalid' : ''}`}>
+                <label className="prg-stepper-lab" htmlFor={`${id}-inc`}>Incrément (kg)</label>
+                <input
+                  id={`${id}-inc`}
+                  className="num"
+                  inputMode="decimal"
+                  enterKeyHint="done"
+                  autoComplete="off"
+                  aria-invalid={incError ? true : undefined}
+                  aria-describedby={incError ? `${id}-inc-err` : `${id}-inc-note`}
+                  value={incShown}
+                  onFocus={(e) => e.currentTarget.select()}
+                  onChange={(e) => editIncrement(e.target.value)}
+                  onBlur={() => {
+                    setIncTouched(true)
+                    // Valeur valide : on revient à l'affichage normalisé de la valeur enregistrée.
+                    if (validateIncrement(incShown).ok) setIncDraft(null)
+                  }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
+                />
+                <p id={`${id}-inc-note`} className="prg-inc-note">Pas des boutons +/− et des hausses de charge. Vaut pour cet exercice partout.</p>
+              </div>
+            )}
+            {incError && <p id={`${id}-inc-err`} className="prg-error" role="alert">{incError}</p>}
             <div className="prg-row-actions">
               <button type="button" className="prg-text-btn" disabled={index === 0} onClick={() => onMove(-1)}>Monter</button>
               <button type="button" className="prg-text-btn" disabled={index === count - 1} onClick={() => onMove(1)}>Descendre</button>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  createCustomExercise, deleteTemplate, deleteTemplateExercise, loadPrograms, saveTemplate, saveTemplateExercise, saveTemplateExercises,
+  createCustomExercise, deleteTemplate, deleteTemplateExercise, loadPrograms, saveExercise, saveTemplate, saveTemplateExercise, saveTemplateExercises,
 } from '../../data/repo'
 import { defaultSlot, nextOrder, nextRotationOrder, reindex, type Slot } from '../../domain/programEdit'
 import type { AppData, Exercise, TemplateExercise, WorkoutTemplate } from '../../domain/types'
@@ -102,6 +102,12 @@ export function usePrograms() {
     mutate((d) => ({ ...d, templateExercises: d.templateExercises.map((x) => (x.id === te.id ? next : x)) }), () => saveTemplateExercise(next))
   }, [mutate])
 
+  /** Incrément de l'exercice : vaut partout (tous les programmes, séance, propositions). */
+  const updateIncrement = useCallback((ex: Exercise, increment: number) => {
+    const next = { ...ex, increment }
+    mutate((d) => ({ ...d, exercises: d.exercises.map((x) => (x.id === ex.id ? next : x)) }), () => saveExercise(next))
+  }, [mutate])
+
   /** Nouvel ordre des lignes d'un programme (order = position). */
   const reorder = useCallback((rows: TemplateExercise[]) => {
     const next = reindex(rows)
@@ -115,6 +121,6 @@ export function usePrograms() {
 
   return {
     data, saveError, dismissError: () => setSaveError(false),
-    addTemplate, renameTemplate, removeTemplate, addExercise, createExercise, updateSlot, reorder, removeExercise,
+    addTemplate, renameTemplate, removeTemplate, addExercise, createExercise, updateSlot, updateIncrement, reorder, removeExercise,
   }
 }
