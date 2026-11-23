@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -95,6 +95,16 @@ describe('Ajouter une séance oubliée', () => {
     expect(await screen.findByText('La date ne peut pas être dans le futur')).toBeInTheDocument()
     expect(await db.sessions.count()).toBe(0)
     expect(visited.at(-1)).toBe('/seances/nouvelle?date=2026-11-25')
+  })
+
+  it('date effacée : « Choisis une date », rien créé', async () => {
+    renderAt('/seances/nouvelle?date=2026-11-10')
+    const push = await screen.findByRole('button', { name: /Push/ })
+    fireEvent.change(screen.getByLabelText('Date de la séance'), { target: { value: '' } })
+    await userEvent.click(push)
+    expect(await screen.findByText('Choisis une date')).toBeInTheDocument()
+    expect(screen.queryByText('La date ne peut pas être dans le futur')).not.toBeInTheDocument()
+    expect(await db.sessions.count()).toBe(0)
   })
 
   it('date absente ou mal formée → aujourd\'hui ; l\'input est borné à aujourd\'hui', async () => {

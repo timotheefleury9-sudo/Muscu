@@ -30,7 +30,11 @@ export default function NewPastSessionPage() {
 
   const create = async (templateId: string) => {
     if (busy.current || !choices) return
-    if (!day || !canMoveTo(day, today)) {
+    if (!day) {
+      setError('Choisis une date')
+      return
+    }
+    if (!canMoveTo(day, today)) {
       setError('La date ne peut pas être dans le futur')
       return
     }
