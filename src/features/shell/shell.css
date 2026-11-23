@@ -1,0 +1,28 @@
+/* Coquille de l'app : bandeau d'installation, écran d'erreur, squelette de chargement. */
+
+/* Bandeau d'installation : discret, au-dessus du contenu */
+.install-banner {
+  flex: none; display: flex; align-items: center; gap: 4px; margin: 4px calc(var(--safe-right) + 12px) 0 calc(var(--safe-left) + 12px);
+  padding: 4px 4px 4px 14px; border-radius: 16px; background: var(--surface); color: var(--text-muted); font-size: 13px; line-height: 1.35;
+}
+.install-banner span { flex: 1; }
+.install-banner button {
+  flex: none; width: 44px; height: 44px; display: grid; place-items: center; border: 0; background: none; color: var(--text-muted); cursor: pointer;
+}
+.install-banner button:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; border-radius: 12px; }
+.install-banner svg { width: 18px; height: 18px; }
+
+/* Écran d'erreur */
+.app-error h1 { font-size: 28px; font-weight: 800; font-stretch: 85%; margin: 8px 4px 8px; line-height: 1.1; }
+.app-error p { margin: 0 4px 18px; color: var(--text-muted); font-size: 15px; line-height: 1.45; }
+.app-error button {
+  width: 100%; min-height: 54px; border: 0; border-radius: var(--radius-pill); background: var(--accent); color: var(--accent-contrast);
+  font: inherit; font-weight: 700; font-size: 17px; cursor: pointer;
+}
+.app-error button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+/* Squelette pendant le chargement d'un écran différé */
+.skeleton-line, .skeleton-block { background: var(--surface); border-radius: var(--radius-control); }
+.skeleton-line { height: 34px; width: 60%; margin: 8px 4px 16px; }
+.skeleton-block { height: 240px; border-radius: var(--radius-card); margin-bottom: 12px; }
+.skeleton-block.is-short { height: 96px; }

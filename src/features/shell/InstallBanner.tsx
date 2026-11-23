@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import '../settings/settings.css'
+import './shell.css'
 
 const DISMISS_KEY = 'muscu:installBannerDismissed'
 

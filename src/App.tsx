@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react'
-import { NavLink, Route, Routes } from 'react-router-dom'
+import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import SessionPage from './features/session/SessionPage'
 import ProgramsPage from './features/programs/ProgramsPage'
 import TemplateEditor from './features/programs/TemplateEditor'
@@ -7,6 +7,7 @@ import WeekSummaryPage from './features/progress/WeekSummaryPage'
 import MuscleDetailPage from './features/progress/MuscleDetailPage'
 import SettingsPage from './features/settings/SettingsPage'
 import InstallBanner from './features/shell/InstallBanner'
+import ErrorBoundary from './features/shell/ErrorBoundary'
 
 // Recharts n'est chargé qu'à l'ouverture d'une courbe (bloc séparé, précaché par le service worker).
 const ExerciseChartPage = lazy(() => import('./features/progress/ExerciseChartPage'))
@@ -28,26 +29,40 @@ const TABS = [
   },
 ]
 
+function ChartSkeleton() {
+  return (
+    <section className="page" aria-busy="true" aria-label="Chargement">
+      <div className="skeleton-line" />
+      <div className="skeleton-block" />
+      <div className="skeleton-block is-short" />
+    </section>
+  )
+}
+
 export default function App() {
+  const { pathname } = useLocation()
   return (
     <div className="app">
       <div className="topbar" aria-hidden="true" />
       <InstallBanner />
       <main className="app-main">
-        <Routes>
-          <Route path="/" element={<SessionPage />} />
-          <Route path="/programmes" element={<ProgramsPage />} />
-          <Route path="/programmes/:id" element={<TemplateEditor />} />
-          <Route path="/progression" element={<WeekSummaryPage />} />
-          <Route path="/progression/muscle/:group" element={<MuscleDetailPage />} />
-          <Route path="/progression/exercice/:id" element={
-              <Suspense fallback={<section className="page" aria-busy="true" />}>
-                <ExerciseChartPage />
-              </Suspense>
-            } />
-          <Route path="/reglages" element={<SettingsPage />} />
-          <Route path="*" element={<SessionPage />} />
-        </Routes>
+        {/* Clé = chemin : changer d'onglet sort de l'écran d'erreur. */}
+        <ErrorBoundary key={pathname}>
+          <Routes>
+            <Route path="/" element={<SessionPage />} />
+            <Route path="/programmes" element={<ProgramsPage />} />
+            <Route path="/programmes/:id" element={<TemplateEditor />} />
+            <Route path="/progression" element={<WeekSummaryPage />} />
+            <Route path="/progression/muscle/:group" element={<MuscleDetailPage />} />
+            <Route path="/progression/exercice/:id" element={
+                <Suspense fallback={<ChartSkeleton />}>
+                  <ExerciseChartPage />
+                </Suspense>
+              } />
+            <Route path="/reglages" element={<SettingsPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </ErrorBoundary>
       </main>
       <nav className="tabbar" aria-label="Navigation principale">
         {TABS.map((t) => (

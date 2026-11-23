@@ -18,14 +18,3 @@
 .set-msg.is-ok { color: var(--success); }
 .set-file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
-/* Bandeau d'installation : discret, au-dessus du contenu */
-.install-banner {
-  flex: none; display: flex; align-items: center; gap: 4px; margin: 4px calc(var(--safe-right) + 12px) 0 calc(var(--safe-left) + 12px);
-  padding: 4px 4px 4px 14px; border-radius: 16px; background: var(--surface); color: var(--text-muted); font-size: 13px; line-height: 1.35;
-}
-.install-banner span { flex: 1; }
-.install-banner button {
-  flex: none; width: 44px; height: 44px; display: grid; place-items: center; border: 0; background: none; color: var(--text-muted); cursor: pointer;
-}
-.install-banner button:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; border-radius: 12px; }
-.install-banner svg { width: 18px; height: 18px; }

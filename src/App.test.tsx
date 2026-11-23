@@ -43,3 +43,11 @@ describe('App', () => {
     expect(screen.queryByRole('heading', { level: 1, name: 'Push' })).not.toBeInTheDocument()
   })
 })
+
+describe('App : routes inconnues', () => {
+  it('redirige vers la séance', async () => {
+    renderApp('/nimporte-quoi')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Push' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Séance' })).toHaveAttribute('aria-current', 'page')
+  })
+})
