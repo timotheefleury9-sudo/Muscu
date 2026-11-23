@@ -9,13 +9,15 @@ import { endSession, saveSet, startSession } from '../../data/repo'
 
 type Perf = [exerciseId: string, weight: number, reps: number[]]
 
-/** Séance terminée à la date locale donnée, avec ses séries validées. */
+/** Séance terminée à la date locale donnée, avec ses séries validées (rattachées au template). */
 async function session(at: Date, perfs: Perf[]) {
   const s = await startSession('tpl-push')
+  const tes = await db.templateExercises.toArray()
   for (const [exerciseId, weight, reps] of perfs) {
+    const templateExerciseId = tes.find((t) => t.exerciseId === exerciseId)?.id ?? null
     for (const [setIndex, r] of reps.entries()) {
       await saveSet({
-        id: crypto.randomUUID(), sessionId: s.id, exerciseId, templateExerciseId: null, setIndex,
+        id: crypto.randomUUID(), sessionId: s.id, exerciseId, templateExerciseId, setIndex,
         plannedWeight: weight, plannedReps: r, weight, reps: r, done: true,
       })
     }
@@ -112,7 +114,7 @@ describe('Progression', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Pectoraux' })).toBeInTheDocument()
     const list = await screen.findByRole('region', { name: 'Exercices de la semaine' })
     const names = within(list).getAllByRole('button').map((b) => b.querySelector('.p-ex-name')?.textContent)
-    expect(names.sort()).toEqual(['Développé couché haltères', 'Développé couché machine', 'Pec deck'])
+    expect(names).toEqual(['Développé couché haltères', 'Développé couché machine', 'Pec deck'])
   })
 
   it('le tap sur un exercice ouvre sa courbe', async () => {
@@ -121,6 +123,7 @@ describe('Progression', () => {
     await userEvent.click(await within(exercises).findByRole('button', { name: /Développé couché machine/ }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Développé couché machine' })).toBeInTheDocument()
     expect(screen.getByText('1RM estimé (kg)')).toBeInTheDocument()
+    expect(document.querySelector('.p-hero-sub')).toHaveTextContent('+0,9 kg depuis le 9 nov.')
     const facts = screen.getByRole('region', { name: 'Repères' })
     expect(within(facts).getByText('Record')).toBeInTheDocument()
     expect(facts).toHaveTextContent('77,5 kg × 11')

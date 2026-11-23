@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { CartesianGrid, Line, LineChart, ReferenceLine, Tooltip, XAxis, YAxis } from 'recharts'
-import { exerciseHighlights, exerciseSeries, type ExerciseHighlights } from '../../domain/metrics'
+import { exerciseHighlights, exerciseSeries, type ExerciseHighlights, type ExerciseSeries } from '../../domain/metrics'
 import type { Exercise } from '../../domain/types'
 import { formatWeight } from '../../domain/parseWeight'
 import { GROUP_LABEL, formatSet, shortDate, weekFromParam, weekLabel } from './labels'
@@ -12,7 +12,7 @@ const WEEKS = 12
 const X_TICKS = [0, 3, 6, 9, 11]
 const fmt = (n: number): string => formatWeight(Math.round(n * 10) / 10)
 
-type Point = { weekStart: string; value: number | null }
+type Point = ExerciseSeries['points'][number]
 
 /** Axe vertical : bornes arrondies au pas, avec une marge d'un demi-pas. */
 function yScale(values: number[], reps: boolean): { domain: [number, number]; ticks: number[] } {
@@ -119,20 +119,22 @@ export default function ExerciseChartPage() {
       {ex && (
         <BackButton fallbackTo={`/progression/muscle/${ex.primaryGroup}?semaine=${week}`} fallbackLabel={GROUP_LABEL[ex.primaryGroup]} />
       )}
-      {ex && view && <Content key={`${id}-${week}`} ex={ex} series={view.series} highlights={view.highlights} />}
+      {ex && view && <Content key={`${id}-${week}`} ex={ex} series={view.series.points} unit={view.series.unit} highlights={view.highlights} />}
     </ProgressScreen>
   )
 }
 
-function Content({ ex, series, highlights }: { ex: Exercise; series: Point[]; highlights: ExerciseHighlights | null }) {
+function Content({ ex, series, unit, highlights }: {
+  ex: Exercise; series: Point[]; unit: ExerciseSeries['unit']; highlights: ExerciseHighlights | null
+}) {
   const [picked, setPicked] = useState<number | null>(null)
-  const reps = ex.bodyweight && (highlights?.record.weight ?? 0) === 0
-  const unit = reps ? 'reps' : 'kg'
+  const reps = unit === 'reps'
   const present = series.map((p, i) => (p.value === null ? -1 : i)).filter((i) => i >= 0)
   const last = present[present.length - 1]
   const sel = picked !== null && series[picked]?.value != null ? picked : last
   const value = sel === undefined ? null : series[sel].value
   const diff = present.length > 1 ? series[last].value! - series[present[0]].value! : null
+  const since = present.length > 0 ? `depuis le ${shortDate(series[present[0]].weekStart)}` : ''
   const gaps = present.length > 0 && present.length < series.length
 
   return (
@@ -147,9 +149,9 @@ function Content({ ex, series, highlights }: { ex: Exercise; series: Point[]; hi
           <div className="p-hero-sub">
             {sel !== last ? weekLabel(series[sel].weekStart)
               : diff === null ? weekLabel(series[sel].weekStart)
-              : diff > 0 ? <><span className="up">+{fmt(diff)} {unit}</span> en {WEEKS} semaines</>
-              : diff < 0 ? `−${fmt(-diff)} ${unit} en ${WEEKS} semaines`
-              : `Stable sur ${WEEKS} semaines`}
+              : diff > 0 ? <><span className="up">+{fmt(diff)} {unit}</span> {since}</>
+              : diff < 0 ? `−${fmt(-diff)} ${unit} ${since}`
+              : `Stable ${since}`}
           </div>
         </div>
       )}

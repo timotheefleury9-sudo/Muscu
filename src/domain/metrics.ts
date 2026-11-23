@@ -1,4 +1,4 @@
-import type { AppData, Exercise, MuscleGroup } from './types'
+import type { AppData, Exercise, MuscleGroup, SetLog } from './types'
 import type { PerformedSet } from './progression'
 import { addDays, weekStart } from './dates'
 
@@ -88,12 +88,26 @@ export function weeklySummary(data: AppData, weekStartIso: string): WeeklySummar
   const setsByGroup = Object.fromEntries(GROUPS.map(g => [g, 0])) as Record<MuscleGroup, number>
   const weekOfSession = new Map(data.sessions.map(s => [s.id, weekStart(s.startedAt)]))
   const startedAt = new Map(data.sessions.map(s => [s.id, s.startedAt]))
-  const inWeek = data.sets
-    .filter(s => s.done && weekOfSession.get(s.sessionId) === weekStartIso)
-    .sort((a, b) => {
-      const sa = startedAt.get(a.sessionId)!, sb = startedAt.get(b.sessionId)!
-      return sa < sb ? -1 : sa > sb ? 1 : a.setIndex - b.setIndex
-    })
+  const teOrder = new Map(data.templateExercises.map(te => [te.id, te.order]))
+  const filtered = data.sets.filter(s => s.done && weekOfSession.get(s.sessionId) === weekStartIso)
+  // Premier setIndex de chaque exercice dans sa séance : départage les exercices hors template.
+  const firstIdx = new Map<string, number>()
+  for (const s of filtered) {
+    const k = `${s.sessionId}|${s.exerciseId}`
+    firstIdx.set(k, Math.min(firstIdx.get(k) ?? Infinity, s.setIndex))
+  }
+  const rank = (s: SetLog): number => (s.templateExerciseId !== null ? teOrder.get(s.templateExerciseId) : undefined) ?? Infinity
+  const cmp = (x: string | number, y: string | number): number => (x < y ? -1 : x > y ? 1 : 0)
+  // Séance par séance ; dans une séance : ordre du template, puis exercices hors template
+  // (ou dont la ligne de template a été supprimée) par premier setIndex puis id.
+  const inWeek = filtered.sort((a, b) =>
+    cmp(startedAt.get(a.sessionId)!, startedAt.get(b.sessionId)!)
+    || cmp(a.sessionId, b.sessionId)
+    || cmp(rank(a), rank(b))
+    || (rank(a) === Infinity ? cmp(firstIdx.get(`${a.sessionId}|${a.exerciseId}`)!, firstIdx.get(`${b.sessionId}|${b.exerciseId}`)!) : 0)
+    || cmp(a.exerciseId, b.exerciseId)
+    || a.setIndex - b.setIndex,
+  )
 
   const sessionsDone = new Set(inWeek.map(s => s.sessionId)).size
   const order: string[] = []
@@ -121,22 +135,30 @@ export function weeklySummary(data: AppData, weekStartIso: string): WeeklySummar
 
 const round1 = (n: number): number => Math.round(n * 10) / 10
 
-export function exerciseSeries(
-  data: AppData,
-  exerciseId: string,
-  weeks: number,
-  endWeek: string,
-): { weekStart: string; value: number | null }[] {
+export interface ExerciseSeries {
+  unit: 'kg' | 'reps'
+  points: { weekStart: string; value: number | null }[]
+}
+
+/**
+ * Valeur hebdomadaire d'un exercice sur `weeks` semaines finissant à endWeek (null = pas de séance).
+ * Unité unique sur la fenêtre : e1RM en kg ; pour un exercice au poids du corps jamais lesté
+ * dans la fenêtre, répétitions de la meilleure série. S'il a été lesté, seules les séries lestées comptent.
+ */
+export function exerciseSeries(data: AppData, exerciseId: string, weeks: number, endWeek: string): ExerciseSeries {
   const ex = data.exercises.find(e => e.id === exerciseId)
   const byWeek = new Map(weeksOf(data, exerciseId).map(w => [w.week, w.sets]))
-  return Array.from({ length: weeks }, (_, i) => {
-    const week = addDays(endWeek, -7 * (weeks - 1 - i))
-    const sets = byWeek.get(week)
-    if (!sets || !ex) return { weekStart: week, value: null }
-    const best = bestOf(sets, ex.bodyweight)
-    const value = ex.bodyweight && best.weight === 0 ? best.reps : round1(e1rm(best.weight, best.reps))
-    return { weekStart: week, value }
+  const window = Array.from({ length: weeks }, (_, i) => addDays(endWeek, -7 * (weeks - 1 - i)))
+  const bodyweight = ex?.bodyweight ?? false
+  const loaded = !bodyweight || window.some(w => (byWeek.get(w) ?? []).some(s => s.weight > 0))
+  const unit = loaded ? 'kg' : 'reps'
+  const points = window.map(week => {
+    const sets = (byWeek.get(week) ?? []).filter(s => !bodyweight || !loaded || s.weight > 0)
+    if (sets.length === 0 || !ex) return { weekStart: week, value: null }
+    const best = bestOf(sets, bodyweight)
+    return { weekStart: week, value: loaded ? round1(e1rm(best.weight, best.reps)) : best.reps }
   })
+  return { unit, points }
 }
 
 export interface ExerciseHighlights {

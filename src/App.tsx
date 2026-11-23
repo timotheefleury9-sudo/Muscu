@@ -1,10 +1,13 @@
+import { Suspense, lazy } from 'react'
 import { NavLink, Route, Routes } from 'react-router-dom'
 import SessionPage from './features/session/SessionPage'
 import ProgramsPage from './features/programs/ProgramsPage'
 import WeekSummaryPage from './features/progress/WeekSummaryPage'
 import MuscleDetailPage from './features/progress/MuscleDetailPage'
-import ExerciseChartPage from './features/progress/ExerciseChartPage'
 import SettingsPage from './features/settings/SettingsPage'
+
+// Recharts n'est chargé qu'à l'ouverture d'une courbe (bloc séparé, précaché par le service worker).
+const ExerciseChartPage = lazy(() => import('./features/progress/ExerciseChartPage'))
 
 const TABS = [
   { to: '/', label: 'Séance', end: true, icon: <path d="M3 9v6M6.5 6v12M17.5 6v12M21 9v6M6.5 12h11" /> },
@@ -33,7 +36,11 @@ export default function App() {
           <Route path="/programmes" element={<ProgramsPage />} />
           <Route path="/progression" element={<WeekSummaryPage />} />
           <Route path="/progression/muscle/:group" element={<MuscleDetailPage />} />
-          <Route path="/progression/exercice/:id" element={<ExerciseChartPage />} />
+          <Route path="/progression/exercice/:id" element={
+              <Suspense fallback={<section className="page" aria-busy="true" />}>
+                <ExerciseChartPage />
+              </Suspense>
+            } />
           <Route path="/reglages" element={<SettingsPage />} />
           <Route path="*" element={<SessionPage />} />
         </Routes>

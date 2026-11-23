@@ -97,13 +97,47 @@ describe('exerciseSeries', () => {
   it('null pour les semaines sans séance, ordre ancien -> récent', () => {
     const d = base([sess('a', W1), sess('c', W3)], [set('a', 'dev', 80, 8), set('c', 'dev', 80, 10)])
     const s = exerciseSeries(d, 'dev', 4, '2026-11-16')
-    expect(s.map(p => p.weekStart)).toEqual(['2026-10-26', '2026-11-02', '2026-11-09', '2026-11-16'])
-    expect(s.map(p => p.value)).toEqual([null, 101.3, null, 106.7])
+    expect(s.unit).toBe('kg')
+    expect(s.points.map(p => p.weekStart)).toEqual(['2026-10-26', '2026-11-02', '2026-11-09', '2026-11-16'])
+    expect(s.points.map(p => p.value)).toEqual([null, 101.3, null, 106.7])
   })
-  it('poids du corps : reps sans lest, e1RM avec lest', () => {
-    const d = base([sess('a', W1), sess('b', W2)], [set('a', 'pompes', 0, 20), set('a', 'pompes', 0, 25), set('b', 'pompes', 10, 12)])
-    const s = exerciseSeries(d, 'pompes', 2, '2026-11-09')
-    expect(s.map(p => p.value)).toEqual([25, 14])
+  it('poids du corps jamais lesté sur la fenêtre : reps', () => {
+    const d = base([sess('a', W1), sess('b', W2), sess('c', W3)], [set('a', 'pompes', 10, 5), set('b', 'pompes', 0, 20), set('c', 'pompes', 0, 25)])
+    expect(exerciseSeries(d, 'pompes', 2, '2026-11-16')).toEqual({
+      unit: 'reps', points: [{ weekStart: '2026-11-09', value: 20 }, { weekStart: '2026-11-16', value: 25 }],
+    })
+  })
+  it('poids du corps lesté dans la fenêtre : e1RM kg des séries lestées, semaines sans lest => null', () => {
+    const d = base(
+      [sess('a', W1), sess('b', W2), sess('c', W3)],
+      [set('a', 'pompes', 0, 20), set('a', 'pompes', 0, 25), set('b', 'pompes', 10, 12), set('b', 'pompes', 0, 30), set('c', 'pompes', 0, 28)],
+    )
+    const s = exerciseSeries(d, 'pompes', 3, '2026-11-16')
+    expect(s.unit).toBe('kg')
+    expect(s.points.map(p => p.value)).toEqual([null, 14, null])
+  })
+})
+
+describe('weeklySummary : ordre des exercices dans une séance', () => {
+  const te = (id: string, exerciseId: string, order: number) => ({ id, templateId: 't', exerciseId, order, sets: 3, repsMin: 8, repsMax: 12, restSec: 90 })
+  const at = (id: string, sessionId: string, exerciseId: string, templateExerciseId: string | null, setIndex: number): SetLog => ({
+    id, sessionId, exerciseId, templateExerciseId, setIndex, plannedWeight: null, plannedReps: null, weight: 50, reps: 10, done: true,
+  })
+  it('ordre du template, puis exercices hors template (premier setIndex, puis id)', () => {
+    const data: AppData = {
+      ...base([sess('a', W3)], []),
+      exercises: [ex('dev', 'pectoraux'), ex('squat', 'quadriceps'), ex('pompes', 'pectoraux', true), ex('curl', 'biceps'), ex('dips', 'triceps')],
+      templateExercises: [te('te-squat', 'squat', 0), te('te-dev', 'dev', 1), te('te-old', 'pompes', 2)],
+      // Ids en ordre inverse de l'ordre attendu : l'ordre de stockage ne doit pas compter.
+      sets: [
+        at('z1', 'a', 'squat', 'te-squat', 0), at('z2', 'a', 'squat', 'te-squat', 1),
+        at('y1', 'a', 'dev', 'te-dev', 0), at('y2', 'a', 'dev', 'te-dev', 1),
+        at('x1', 'a', 'curl', null, 0),
+        at('w1', 'a', 'pompes', 'te-supprime', 0),
+        at('v1', 'a', 'dips', null, 1),
+      ].reverse(),
+    }
+    expect(weeklySummary(data, '2026-11-16').exercises.map(e => e.exerciseId)).toEqual(['squat', 'dev', 'curl', 'pompes', 'dips'])
   })
 })
 
