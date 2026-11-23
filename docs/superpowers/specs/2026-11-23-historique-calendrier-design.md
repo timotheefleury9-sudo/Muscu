@@ -1,6 +1,6 @@
 # Historique des séances et calendrier — conception
 
-Date : 2026-11-23 · Statut : en attente de validation · Complète `2026-11-22-app-muscu-design.md`
+Date : 2026-11-23 · Statut : validé par Tim · Complète `2026-11-22-app-muscu-design.md`
 
 ## Intention
 
@@ -28,7 +28,7 @@ Tim veut accéder à toutes ses séances enregistrées, les corriger ou les supp
 
 ## Choix de Claude (à corriger si besoin)
 
-- **Marquage des jours** : une pastille de couleur par séance type (couleur liée à l'ordre de rotation), légende sous le calendrier (« Push · Pull · Legs »). Plusieurs séances le même jour : plusieurs pastilles ; toucher le jour ouvre une petite liste.
+- **Marquage des jours** (choix de Tim) : une seule pastille avec une icône d'haltère sur chaque jour d'entraînement, sans couleur ni légende ; le détail (séance type, exercices) s'affiche en touchant le jour. Plusieurs séances le même jour : toujours une seule pastille ; toucher le jour ouvre une petite liste.
 - **Écrans et adresses** : `/progression/calendrier?mois=AAAA-MM`, `/progression/seances` (liste), `/seances/:id` (détail), `/seances/nouvelle?date=AAAA-MM-JJ`.
 - **Liste** : date courte, séance type, nombre d'exercices et de séries validées ; groupée par mois.
 - **Modification** : chaque changement est enregistré immédiatement, avec le même bandeau d'erreur que l'écran Séance. On peut aussi ajouter un exercice oublié (sélecteur d'exercices existant) et retirer un exercice de la séance.
