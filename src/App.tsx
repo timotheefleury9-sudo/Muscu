@@ -5,6 +5,8 @@ import ProgramsPage from './features/programs/ProgramsPage'
 import TemplateEditor from './features/programs/TemplateEditor'
 import WeekSummaryPage from './features/progress/WeekSummaryPage'
 import MuscleDetailPage from './features/progress/MuscleDetailPage'
+import CalendarPage from './features/history/CalendarPage'
+import SessionListPage from './features/history/SessionListPage'
 import SettingsPage from './features/settings/SettingsPage'
 import InstallBanner from './features/shell/InstallBanner'
 import ErrorBoundary from './features/shell/ErrorBoundary'
@@ -59,6 +61,8 @@ export default function App() {
                   <ExerciseChartPage />
                 </Suspense>
               } />
+            <Route path="/progression/calendrier" element={<CalendarPage />} />
+            <Route path="/progression/seances" element={<SessionListPage />} />
             <Route path="/reglages" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

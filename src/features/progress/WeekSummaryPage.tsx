@@ -42,10 +42,14 @@ export default function WeekSummaryPage() {
         <button type="button" aria-label="Semaine précédente" onClick={() => goWeek(previousWeek(week), -1)}>
           <IconLeft />
         </button>
-        <div className="p-week-label">
+        <button
+          type="button"
+          className="p-week-label"
+          onClick={() => navigate(`/progression/calendrier?mois=${week.slice(0, 7)}`, { state: back })}
+        >
           <strong>{weekLabel(week)}</strong>
           {sub && <span>{sub}</span>}
-        </div>
+        </button>
         {week < now ? (
           <button type="button" aria-label="Semaine suivante" onClick={() => goWeek(nextWeek(week), 1)}>
             <IconRight />

@@ -29,6 +29,8 @@
 .p-week-label { text-align: center; }
 .p-week-label strong { display: block; font-size: 17px; }
 .p-week-label span { font-size: 13px; color: var(--text-muted); }
+.prog .p-week-label { min-height: 44px; padding: 0 10px; border-radius: var(--radius-control); text-align: center; transition: background-color var(--dur-fast) var(--ease); }
+.prog button.p-week-label:active { background: var(--surface-2); }
 
 .p-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 .prog .p-kpis .p-card { margin: 0; padding: 16px 16px 14px; min-height: 148px; display: flex; flex-direction: column; }
