@@ -54,7 +54,7 @@ export function suggestNext(
   }
   if (streak >= DELOAD_AFTER && refH > 0 && incH > 0) {
     const targetH = Math.floor((refH * 9) / (10 * incH)) * incH
-    if ((targetH > 0 || ex.bodyweight) && targetH < refH) {
+    if (targetH > 0 || ex.bodyweight) {
       return { kind: 'sets', reason: 'deload', sets: uniform(fromH(targetH), slot.repsMin, slot.sets) }
     }
   }

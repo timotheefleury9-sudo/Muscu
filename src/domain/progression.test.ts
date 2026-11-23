@@ -74,7 +74,7 @@ describe('suggestNext', () => {
   it('haltères (incrément 2)', () => {
     expect(suggestNext([three(24, 12)], slot, { increment: 2, bodyweight: false })).toEqual({ kind: 'sets', reason: 'increase', sets: sets(26, 8) })
   })
-  it('arithmétique exacte (77,5 + 2,5, 72/2,5)', () => {
+  it('arithmétique exacte (77,5 + 2,5 ; 0,1 + 0,2)', () => {
     expect(suggestNext([three(77.5, 12)], slot, ex)).toMatchObject({ sets: sets(80, 8) })
     expect(suggestNext([three(0.1, 12)], slot, { increment: 0.2, bodyweight: false })).toMatchObject({ sets: sets(0.3, 8) })
   })
