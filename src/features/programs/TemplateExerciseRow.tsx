@@ -185,7 +185,7 @@ export default function TemplateExerciseRow({ domId, te, exercise, index, count,
                   }}
                   onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
                 />
-                <p id={`${id}-inc-note`} className="prg-inc-note">Pas des boutons +/− et des hausses de charge. Vaut pour cet exercice partout.</p>
+                <p id={`${id}-inc-note`} className="prg-inc-note">Pas des boutons +/− et des hausses de charge. S'applique à cet exercice partout, dans tous les programmes.</p>
               </div>
             )}
             {incError && <p id={`${id}-inc-err`} className="prg-error" role="alert">{incError}</p>}
