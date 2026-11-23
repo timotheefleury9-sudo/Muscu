@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { weekStart, addDays, localDay, addMonths, monthGrid, noonOf, moveToDay } from './dates'
+import { weekStart, addDays, localDay, addMonths, monthGrid, noonOf, moveToDay, shiftDays, daysBetween } from './dates'
 
 describe('weekStart', () => {
   it('un dimanche 23:30 local appartient à la semaine du lundi précédent', () => {
@@ -50,5 +50,16 @@ describe('calendrier', () => {
     expect([d.getMonth(), d.getDate(), d.getHours(), d.getMinutes()]).toEqual([2, 27, 9, 15])
     const e = new Date(moveToDay(new Date(2026, 2, 27, 9, 15).toISOString(), '2026-03-31'))
     expect([e.getDate(), e.getHours()]).toEqual([31, 9])
+  })
+})
+
+describe('shiftDays / daysBetween', () => {
+  it('shiftDays garde l\'heure locale à travers le changement d\'heure', () => {
+    const d = new Date(shiftDays(new Date(2026, 2, 31, 0, 45).toISOString(), -3))
+    expect([d.getMonth(), d.getDate(), d.getHours(), d.getMinutes()]).toEqual([2, 28, 0, 45])
+  })
+  it('daysBetween', () => {
+    expect(daysBetween('2026-11-22', '2026-11-20')).toBe(-2)
+    expect(daysBetween('2026-03-27', '2026-03-31')).toBe(4)
   })
 })

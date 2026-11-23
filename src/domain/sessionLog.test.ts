@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canMoveTo, sessionsByDay, sessionSummaries } from './sessionLog'
+import { canMoveTo, moveSessionTimes, sessionsByDay, sessionSummaries } from './sessionLog'
 import type { AppData, Session, SetLog } from './types'
 
 const at = (m: number, d: number, h = 10) => new Date(2026, m - 1, d, h, 0).toISOString()
@@ -55,5 +55,20 @@ describe('canMoveTo', () => {
     expect(canMoveTo('2026-11-24', '2026-11-23')).toBe(false)
     expect(canMoveTo('2026-11-23', '2026-11-23')).toBe(true)
     expect(canMoveTo('2026-11-01', '2026-11-23')).toBe(true)
+  })
+})
+
+describe('moveSessionTimes', () => {
+  const L = (m: number, d: number, h: number, mi: number) => new Date(m - 1 === 10 ? 2026 : 2026, m - 1, d, h, mi).toISOString()
+  it('séance franchissant minuit : durée et heures conservées', () => {
+    const r = moveSessionTimes({ startedAt: L(11, 22, 23, 30), endedAt: L(11, 23, 0, 45) }, '2026-11-20')
+    expect(r).toEqual({ startedAt: L(11, 20, 23, 30), endedAt: L(11, 21, 0, 45) })
+  })
+  it('à travers le changement d\'heure (29/03/2026)', () => {
+    const r = moveSessionTimes({ startedAt: L(3, 31, 23, 30), endedAt: L(4, 1, 0, 45) }, '2026-03-27')
+    expect(r).toEqual({ startedAt: L(3, 27, 23, 30), endedAt: L(3, 28, 0, 45) })
+  })
+  it('endedAt null reste null', () => {
+    expect(moveSessionTimes({ startedAt: L(11, 22, 10, 0), endedAt: null }, '2026-11-20').endedAt).toBeNull()
   })
 })

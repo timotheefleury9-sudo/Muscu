@@ -128,13 +128,13 @@ describe('repo', () => {
       const sets = await listSets(s.id)
       expect(sets).toHaveLength(2)
       expect(sets.every((x) => x.sessionId === s.id)).toBe(true)
+      expect(sets.map((x) => x.id)).not.toContain(a.id)
     })
 
     it('createPastSession : échec d\'écriture des séries, rien n\'est écrit', async () => {
-      const bulk = vi.spyOn(db.sets, 'bulkAdd').mockRejectedValueOnce(new Error('quota'))
       const put = vi.spyOn(db.sets, 'put').mockRejectedValueOnce(new Error('quota'))
       await expect(createPastSession('t1', new Date().toISOString(), [noSid()])).rejects.toThrow()
-      bulk.mockRestore(); put.mockRestore()
+      put.mockRestore()
       expect(await db.sessions.count()).toBe(0)
       expect(await db.sets.count()).toBe(0)
     })

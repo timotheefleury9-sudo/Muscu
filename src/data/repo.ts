@@ -54,12 +54,12 @@ export const deleteSession = (id: string): Promise<void> =>
     await db.sessions.delete(id)
   })
 
-/** Séance oubliée : créée terminée (endedAt = startedAt) avec ses séries, en une transaction. */
+/** Séance oubliée : créée terminée (endedAt = startedAt) avec ses séries (nouveaux ids), en une transaction. */
 export const createPastSession = (templateId: string, startedAt: string, sets: Omit<SetLog, 'sessionId'>[]): Promise<Session> =>
   db.transaction('rw', db.sessions, db.sets, async () => {
     const s: Session = { id: crypto.randomUUID(), templateId, startedAt, endedAt: startedAt }
     await db.sessions.add(s)
-    for (const x of sets) await saveSet({ ...x, sessionId: s.id })
+    for (const x of sets) await saveSet({ ...x, id: crypto.randomUUID(), sessionId: s.id })
     return s
   })
 

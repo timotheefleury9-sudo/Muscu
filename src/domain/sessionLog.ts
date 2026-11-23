@@ -1,5 +1,5 @@
-import { localDay } from './dates'
-import type { AppData } from './types'
+import { daysBetween, localDay, shiftDays } from './dates'
+import type { AppData, Session } from './types'
 
 export interface SessionSummary { id: string; startedAt: string; day: string; templateName: string; exerciseCount: number; doneSets: number; open: boolean }
 
@@ -39,3 +39,9 @@ export function sessionsByDay(data: AppData, month: string): Record<string, Sess
 
 /** Pas de date future. */
 export const canMoveTo = (day: string, today: string): boolean => day <= today
+
+/** Déplace début et fin de la même durée en jours : la séance garde ses heures locales et sa durée, même si elle franchit minuit. */
+export function moveSessionTimes(s: Pick<Session, 'startedAt' | 'endedAt'>, day: string): { startedAt: string; endedAt: string | null } {
+  const n = daysBetween(localDay(s.startedAt), day)
+  return { startedAt: shiftDays(s.startedAt, n), endedAt: s.endedAt === null ? null : shiftDays(s.endedAt, n) }
+}

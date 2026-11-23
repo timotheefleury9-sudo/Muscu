@@ -49,3 +49,16 @@ export function moveToDay(iso: string, day: string): string {
   const [y, m, d] = day.split('-').map(Number)
   return new Date(y, m - 1, d, t.getHours(), t.getMinutes(), t.getSeconds(), t.getMilliseconds()).toISOString()
 }
+
+/** Même heure locale, n jours calendaires plus tard (ou plus tôt si n < 0), insensible au changement d'heure. */
+export function shiftDays(iso: string, n: number): string {
+  const t = new Date(iso)
+  return new Date(t.getFullYear(), t.getMonth(), t.getDate() + n, t.getHours(), t.getMinutes(), t.getSeconds(), t.getMilliseconds()).toISOString()
+}
+
+/** Nombre de jours calendaires de a à b (YYYY-MM-DD). */
+export function daysBetween(a: string, b: string): number {
+  const [y1, m1, d1] = a.split('-').map(Number)
+  const [y2, m2, d2] = b.split('-').map(Number)
+  return Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y1, m1 - 1, d1)) / 86400000)
+}
