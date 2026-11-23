@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach } from 'vitest'
@@ -23,10 +23,9 @@ function renderApp(path = '/') {
 describe('App', () => {
   it('affiche les 4 onglets', () => {
     renderApp()
-    const nav = screen.getByRole('navigation')
+    const nav = screen.getByRole('navigation', { name: 'Navigation principale' })
     for (const label of ['Séance', 'Programmes', 'Progression', 'Réglages']) {
-      expect(nav).toHaveTextContent(label)
-      expect(screen.getByRole('link', { name: label })).toBeInTheDocument()
+      expect(within(nav).getByRole('link', { name: label })).toBeInTheDocument()
     }
   })
 

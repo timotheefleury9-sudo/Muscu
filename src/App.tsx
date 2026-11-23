@@ -1,5 +1,6 @@
 import { Suspense, lazy, type ReactNode } from 'react'
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { MotionConfig, motion } from 'framer-motion'
 import SessionPage from './features/session/SessionPage'
 import ProgramsPage from './features/programs/ProgramsPage'
 import TemplateEditor from './features/programs/TemplateEditor'
@@ -33,6 +34,10 @@ const TABS: { to: string; label: string; end: boolean; also?: string; icon: Reac
     ),
   },
 ]
+
+function isAlso(also: string | undefined, pathname: string) {
+  return also !== undefined && pathname.startsWith(also)
+}
 
 function ChartSkeleton() {
   return (
@@ -73,22 +78,37 @@ export default function App() {
           </Routes>
         </ErrorBoundary>
       </main>
-      <nav className="tabbar" aria-label="Navigation principale">
-        {TABS.map((t) => (
-          <NavLink
-            key={t.to}
-            to={t.to}
-            end={t.end}
-            // Le détail d'une séance (/seances/…) s'ouvre depuis Progression : l'onglet reste actif.
-            className={({ isActive }) => (isActive || (t.also !== undefined && pathname.startsWith(t.also)) ? 'tab active' : 'tab')}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              {t.icon}
-            </svg>
-            {t.label}
-          </NavLink>
-        ))}
-      </nav>
+      <MotionConfig reducedMotion="user">
+        <nav className="tabbar" aria-label="Navigation principale">
+          {TABS.map((t) => (
+            <NavLink
+              key={t.to}
+              to={t.to}
+              end={t.end}
+              aria-label={t.label}
+              // Le détail d'une séance (/seances/…) s'ouvre depuis Progression : l'onglet reste actif.
+              className={({ isActive }) => (isActive || isAlso(t.also, pathname) ? 'tab active' : 'tab')}
+            >
+              {({ isActive }) => (
+                <>
+                  {/* Pastille de l'onglet actif : glisse d'un onglet à l'autre (layoutId). */}
+                  {(isActive || isAlso(t.also, pathname)) && (
+                    <motion.span
+                      className="tab-pill"
+                      layoutId="tab-pill"
+                      transition={{ duration: 0.24, ease: [0.2, 0.8, 0.2, 1] }}
+                      aria-hidden="true"
+                    />
+                  )}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    {t.icon}
+                  </svg>
+                </>
+              )}
+            </NavLink>
+          ))}
+        </nav>
+      </MotionConfig>
     </div>
   )
 }
