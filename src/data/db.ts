@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
+import { upgradeCatalogV2 } from './migrations'
 import type { Exercise, Session, SetLog, TemplateExercise, WorkoutTemplate } from '../domain/types'
 
 export class MuscuDB extends Dexie {
@@ -17,6 +18,14 @@ export class MuscuDB extends Dexie {
       sessions: 'id, startedAt, templateId',
       sets: 'id, sessionId, exerciseId',
     })
+    // V2 : mêmes tables ; catalogue des bases déjà installées mis à jour (catégories, soulevé de terre).
+    this.version(2).stores({
+      exercises: 'id, primaryGroup',
+      templates: 'id, rotationOrder',
+      templateExercises: 'id, templateId, exerciseId',
+      sessions: 'id, startedAt, templateId',
+      sets: 'id, sessionId, exerciseId',
+    }).upgrade(upgradeCatalogV2)
   }
 }
 

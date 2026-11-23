@@ -4,6 +4,13 @@ import type { AppData, Exercise, Session, SetLog, TemplateExercise, WorkoutTempl
 export const listExercises = (): Promise<Exercise[]> => db.exercises.toArray()
 export const saveExercise = async (e: Exercise): Promise<void> => { await db.exercises.put(e) }
 
+/** Exercice personnalisé et sa ligne dans un programme : tous deux ou aucun. */
+export const createCustomExercise = (e: Exercise, te: TemplateExercise): Promise<void> =>
+  db.transaction('rw', db.exercises, db.templateExercises, async () => {
+    await db.exercises.put(e)
+    await db.templateExercises.put(te)
+  })
+
 export const listTemplates = async (): Promise<WorkoutTemplate[]> => db.templates.orderBy('rotationOrder').toArray()
 export const saveTemplate = async (t: WorkoutTemplate): Promise<void> => { await db.templates.put(t) }
 /** Supprime le modèle et ses lignes d'exercices ; l'historique (séances, séries) est conservé. */

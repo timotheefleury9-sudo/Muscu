@@ -3,7 +3,7 @@ import { db } from './db'
 import {
   deleteTemplateExercise, getOpenSession, endSession, listSets, listTemplateExercises,
   loadAll, saveSet, saveTemplate, saveTemplateExercise, startSession, deleteSet, listTemplates, deleteTemplate, deleteSession, startSessionWithSets,
-  loadPrograms, saveTemplateExercises,
+  loadPrograms, saveTemplateExercises, createCustomExercise,
 } from './repo'
 import type { SetLog, TemplateExercise } from '../domain/types'
 
@@ -102,5 +102,16 @@ describe('repo', () => {
     await expect(saveTemplateExercises([te({ id: 'a', order: 0 }), te({ id: 'b', order: 1 })])).rejects.toThrow('quota')
     put.mockRestore()
     expect((await listTemplateExercises('t1')).map((x) => x.id)).toEqual(['b', 'a'])
+  })
+
+  it('createCustomExercise écrit l\'exercice et sa ligne ensemble, ou rien', async () => {
+    const ex = { id: 'c1', name: 'Perso', primaryGroup: 'dos' as const, secondaryGroups: [], equipment: 'other', kind: 'compound' as const, increment: 2.5, bodyweight: false, custom: true }
+    const put = vi.spyOn(db.templateExercises, 'put').mockRejectedValueOnce(new Error('quota'))
+    await expect(createCustomExercise(ex, te({ id: 'r1', exerciseId: 'c1' }))).rejects.toThrow('quota')
+    put.mockRestore()
+    expect(await db.exercises.get('c1')).toBeUndefined()
+    await createCustomExercise(ex, te({ id: 'r1', exerciseId: 'c1' }))
+    expect(await db.exercises.get('c1')).toBeDefined()
+    expect(await db.templateExercises.get('r1')).toBeDefined()
   })
 })

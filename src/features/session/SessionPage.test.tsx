@@ -1,6 +1,7 @@
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { db } from '../../data/db'
 import { seedIfEmpty } from '../../data/seed'
 import { endSession, saveSet, startSession } from '../../data/repo'
@@ -48,6 +49,21 @@ const doneSets = () => db.sets.filter((s) => s.done && s.sessionId !== '').toArr
 const openSession = async () => (await db.sessions.toArray()).find((s) => s.endedAt === null)
 
 describe('SessionPage', () => {
+  it('un programme vide ajouté à la rotation est sauté', async () => {
+    await withHistory() // dernière séance : Legs
+    await db.templates.put({ id: 'tpl-new', name: 'Nouveau programme', rotationOrder: 3 })
+    render(<SessionPage />)
+    expect(await screen.findByRole('heading', { level: 1, name: 'Push' })).toBeInTheDocument()
+  })
+
+  it('programme choisi sans exercice : état vide avec lien vers Programmes', async () => {
+    await db.templateExercises.clear()
+    render(<MemoryRouter><SessionPage /></MemoryRouter>)
+    expect(await screen.findByText('Ce programme est vide')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ouvrir Programmes' })).toHaveAttribute('href', '/programmes')
+    expect(screen.queryByRole('button', { name: 'Terminer la séance' })).not.toBeInTheDocument()
+  })
+
   it('affiche « Push » et 5 exercices', async () => {
     render(<SessionPage />)
     expect(await screen.findByRole('heading', { level: 1, name: 'Push' })).toBeInTheDocument()

@@ -93,3 +93,6 @@ export const reindex = <T extends { order: number }>(items: T[]): T[] => items.m
 /** Un nouveau programme se place après le dernier de la rotation. */
 export const nextRotationOrder = (templates: Pick<WorkoutTemplate, 'rotationOrder'>[]): number =>
   templates.reduce((m, t) => Math.max(m, t.rotationOrder + 1), 0)
+
+/** order d'une ligne ajoutée en fin de programme (après un retrait, les order peuvent avoir des trous). */
+export const nextOrder = (rows: Pick<TemplateExercise, 'order'>[]): number => rows.reduce((m, r) => Math.max(m, r.order + 1), 0)

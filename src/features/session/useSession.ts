@@ -118,7 +118,7 @@ export function useSession() {
     const version = stateRef.current.version + 1
     const saveError = stateRef.current.saveError
     if (templates.length === 0) return commit({ ...LOADING, status: 'empty', version, saveError })
-    const templateId = session ? session.templateId : nextTemplateId(templates, data.sessions, data.sets)
+    const templateId = session ? session.templateId : nextTemplateId(templates, data.sessions, data.sets, data.templateExercises)
     const template = templates.find((t) => t.id === templateId)!
     commit({ status: 'ready', templates, template, session, items: buildItems(data, templateId, session), version, saveError })
   }, [commit])

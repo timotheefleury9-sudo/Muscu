@@ -72,6 +72,28 @@ describe('TemplateEditor', () => {
     })
   })
 
+  it('après un retrait, un exercice ajouté se place en dernier, même après rechargement', async () => {
+    const user = userEvent.setup()
+    renderAt('/programmes/tpl-push')
+    await user.click(await screen.findByRole('button', { name: /^Pec deck/ }))
+    await user.click(within(screen.getByRole('listitem', { name: 'Pec deck' })).getByRole('button', { name: 'Retirer' }))
+    await user.click(within(screen.getByRole('dialog', { name: 'Retirer « Pec deck » ?' })).getByRole('button', { name: 'Retirer' }))
+    const picker = await openPicker(user)
+    await user.type(within(picker).getByRole('searchbox', { name: 'Rechercher un exercice' }), 'leg curl allonge')
+    await user.click(within(picker).getByText('Leg curl allongé'))
+    await waitFor(async () => expect((await rowsOf('tpl-push')).map((r) => r.name)).toContain('Leg curl allongé'))
+    await pendingProgramWrites()
+
+    const orders = (await rowsOf('tpl-push')).map((r) => r.order)
+    expect(new Set(orders).size).toBe(orders.length)
+    expect((await rowsOf('tpl-push')).at(-1)!.name).toBe('Leg curl allongé')
+
+    cleanup()
+    renderAt('/programmes/tpl-push')
+    const list = await screen.findByRole('list', { name: 'Exercices du programme' })
+    expect(within(list).getAllByRole('listitem').at(-1)).toHaveAccessibleName('Leg curl allongé')
+  })
+
   it('une fourchette invalide est signalée en ligne et n\'est pas enregistrée ; les boutons respectent les bornes', async () => {
     const user = userEvent.setup()
     renderAt('/programmes/tpl-push')

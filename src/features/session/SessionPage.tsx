@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import { isExerciseComplete, nextUnfinished } from '../../domain/sessionFlow'
 import ExerciseCard from './ExerciseCard'
 import { useSession, type RemovedSet } from './useSession'
@@ -12,6 +13,17 @@ const TOAST_MS = 4000
 function dayLabel(iso: string): string {
   const s = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(iso))
   return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+/** Programme sans exercice (tous les programmes sont vides, ou choisi à la main). */
+function EmptyTemplate() {
+  return (
+    <div className="card session-empty-card">
+      <strong>Ce programme est vide</strong>
+      <p>Ajoute-lui des exercices dans l'onglet Programmes.</p>
+      <Link to="/programmes" className="text-btn">Ouvrir Programmes</Link>
+    </div>
+  )
 }
 
 interface Toast { key: number; text: string; undo?: RemovedSet }
@@ -121,11 +133,11 @@ export default function SessionPage() {
           <div className="session-date">{dayLabel(session?.startedAt ?? new Date().toISOString())}</div>
           <div className="session-title">
             <h1>{template.name}</h1>
-            <span className="session-count">
+            {items.length > 0 && <span className="session-count">
               {active >= 0
                 ? <>Exercice <strong>{active + 1}</strong> sur {items.length}</>
                 : <><strong>{complete.filter(Boolean).length}</strong> sur {items.length} terminés</>}
-            </span>
+            </span>}
           </div>
           <div className="progress" aria-hidden="true">
             {items.map((it) => (
@@ -151,6 +163,8 @@ export default function SessionPage() {
             </div>
           )}
         </header>
+
+        {items.length === 0 && <EmptyTemplate />}
 
         {items.map((item, i) => (
           <Fragment key={item.te.id}>

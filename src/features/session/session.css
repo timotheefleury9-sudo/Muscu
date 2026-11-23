@@ -14,6 +14,10 @@
 .progress span { flex: 1; height: 4px; border-radius: 2px; background: var(--surface-2); overflow: hidden; }
 .progress span i { display: block; height: 100%; width: 0; background: var(--text); }
 .session-empty { color: var(--text-muted); }
+.session-empty-card { padding: 20px 18px 10px; }
+.session-empty-card strong { display: block; font-size: 17px; margin-bottom: 4px; }
+.session-empty-card p { margin: 0 0 6px; color: var(--text-muted); font-size: 15px; line-height: 1.4; }
+.session-empty-card .text-btn { min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; font-size: 15px; color: var(--text); text-decoration: none; }
 
 /* Choix d'une autre séance (avant la première série validée) */
 .tpl-switch { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }

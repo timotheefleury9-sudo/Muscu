@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  deleteTemplate, deleteTemplateExercise, loadPrograms, saveExercise, saveTemplate, saveTemplateExercise, saveTemplateExercises,
+  createCustomExercise, deleteTemplate, deleteTemplateExercise, loadPrograms, saveTemplate, saveTemplateExercise, saveTemplateExercises,
 } from '../../data/repo'
-import { defaultSlot, nextRotationOrder, reindex, type Slot } from '../../domain/programEdit'
+import { defaultSlot, nextOrder, nextRotationOrder, reindex, type Slot } from '../../domain/programEdit'
 import type { AppData, Exercise, TemplateExercise, WorkoutTemplate } from '../../domain/types'
 
 export type ProgramsData = Pick<AppData, 'exercises' | 'templates' | 'templateExercises'>
@@ -77,7 +77,7 @@ export function usePrograms() {
   }, [mutate])
 
   const newRow = (d: ProgramsData | null, templateId: string, ex: Exercise): TemplateExercise => ({
-    id: crypto.randomUUID(), templateId, exerciseId: ex.id, order: d ? rowsOf(d, templateId).length : 0, ...defaultSlot(ex),
+    id: crypto.randomUUID(), templateId, exerciseId: ex.id, order: d ? nextOrder(rowsOf(d, templateId)) : 0, ...defaultSlot(ex),
   })
 
   /** Ajoute l'exercice en fin de programme ; renvoie l'id de la ligne. */
@@ -92,7 +92,7 @@ export function usePrograms() {
     const te = newRow(data, templateId, ex)
     mutate(
       (d) => ({ ...d, exercises: [...d.exercises, ex], templateExercises: [...d.templateExercises, te] }),
-      async () => { await saveExercise(ex); await saveTemplateExercise(te) },
+      () => createCustomExercise(ex, te),
     )
     return te.id
   }, [data, mutate])

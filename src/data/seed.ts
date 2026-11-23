@@ -1,6 +1,6 @@
 import { db } from './db'
-import catalog from './catalog/exercises.json'
-import type { Exercise, MuscleGroup, TemplateExercise, WorkoutTemplate } from '../domain/types'
+import { CATALOG } from './catalog'
+import type { Exercise, TemplateExercise, WorkoutTemplate } from '../domain/types'
 
 const LUNGES_ID = 'custom-fentes-marchees-sac-a-dos'
 const lunges: Exercise = {
@@ -14,17 +14,13 @@ const PLAN: { id: string; name: string; exercises: string[] }[] = [
   { id: 'tpl-pull', name: 'Pull', exercises: ['Pullups', 'Leverage_Iso_Row', 'Seated_Cable_Rows', 'Reverse_Machine_Flyes', 'Dumbbell_Bicep_Curl'] },
   { id: 'tpl-legs', name: 'Legs', exercises: ['Barbell_Squat', 'Barbell_Deadlift', LUNGES_ID, 'Leg_Extensions'] },
 ]
-/** Soulevé de terre rattaché aux ischios (spec §5) : le dos (muscle principal du catalogue) passe en secondaire. */
-const deadliftSecondary = (groups: MuscleGroup[]): MuscleGroup[] => ['dos', ...groups.filter((g) => g !== 'ischios' && g !== 'dos')]
 const HEAVY = new Set(['Barbell_Squat', 'Barbell_Deadlift'])
 
 /** Insère le catalogue et le template PPL si la base est vide. Idempotent. */
 export async function seedIfEmpty(): Promise<void> {
   await db.transaction('rw', db.exercises, db.templates, db.templateExercises, async () => {
     if ((await db.exercises.count()) > 0) return
-    const exercises: Exercise[] = [...(catalog as Exercise[]), lunges].map((e) =>
-      e.id === 'Barbell_Deadlift' ? { ...e, primaryGroup: 'ischios', secondaryGroups: deadliftSecondary(e.secondaryGroups) } : e,
-    )
+    const exercises: Exercise[] = [...CATALOG, lunges]
     const byId = new Map(exercises.map((e) => [e.id, e]))
     const templates: WorkoutTemplate[] = PLAN.map((p, i) => ({ id: p.id, name: p.name, rotationOrder: i }))
     const templateExercises: TemplateExercise[] = PLAN.flatMap((p) =>

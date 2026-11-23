@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canStep, defaultSlot, moveItem, stepSlot, nextRotationOrder, validateCustomExercise, validateSlot, type CustomExerciseInput } from './programEdit'
+import { canStep, defaultSlot, moveItem, nextOrder, stepSlot, nextRotationOrder, validateCustomExercise, validateSlot, type CustomExerciseInput } from './programEdit'
 import type { Exercise } from './types'
 
 describe('validateSlot', () => {
@@ -129,5 +129,12 @@ describe('stepSlot', () => {
     expect(canStep({ ...s, sets: 1 }, 'sets', -1)).toBe(false)
     expect(canStep(s, 'sets', -1)).toBe(true)
     expect(canStep({ ...s, repsMin: 12 }, 'repsMax', -1)).toBe(false)
+  })
+})
+
+describe('nextOrder', () => {
+  it('après le dernier, même avec des trous laissés par un retrait', () => {
+    expect(nextOrder([])).toBe(0)
+    expect(nextOrder([{ order: 0 }, { order: 1 }, { order: 3 }, { order: 4 }])).toBe(5)
   })
 })
