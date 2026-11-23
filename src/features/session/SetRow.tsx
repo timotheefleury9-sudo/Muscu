@@ -210,7 +210,7 @@ export default function SetRow({ set, n, increment, bodyweight, repsMin, open, o
                 />
               </div>
               {removeButton && (
-                <button type="button" className="text-btn muted set-remove" aria-label={`Supprimer la série ${n}`} onClick={onRemove}>
+                <button type="button" className="text-btn set-remove" aria-label={`Supprimer la série ${n}`} onClick={onRemove}>
                   Supprimer la série
                 </button>
               )}
