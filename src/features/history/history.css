@@ -46,6 +46,17 @@
 .prog .h-session { min-height: 52px; }
 .prog .h-session .p-tag { margin-left: 0; flex: none; }
 
+/* Liste : glisser vers la gauche découvre « Supprimer » (comme une série sur l'écran Séance). Séparateur sur l'élément fixe. */
+.h-swipe-item { overflow: hidden; }
+.h-swipe-item + .h-swipe-item .h-swipe { border-top: 1px solid var(--border); }
+.h-swipe { position: relative; overflow: hidden; }
+.prog .h-swipe .p-ex-row { border-top: 0; touch-action: pan-y; background: var(--surface); transition: background-color var(--dur) var(--ease); }
+.h-swipe-row { position: relative; }
+.prog .h-swipe-action {
+  position: absolute; top: 0; bottom: 0; right: 0; width: 96px; border-radius: var(--radius-row);
+  background: var(--danger); color: var(--danger-contrast); font-weight: 700; font-size: 15px; text-align: center;
+}
+
 
 /* Détail d'une séance : en-tête et cartes de l'écran Séance (session.css), boutons remis à zéro par .prog et .session. */
 .h-detail .session-head { padding-top: 4px; }
