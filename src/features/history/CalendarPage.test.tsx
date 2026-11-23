@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor, waitForElementToBeRemoved, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -129,6 +129,17 @@ describe('Calendrier', () => {
     await waitFor(() => expect(visited).toContain(`/seances/${ids.nov16}`))
   })
 
+  it('« Annuler » ferme la feuille sans naviguer', async () => {
+    renderAt('/progression/calendrier?mois=2026-11')
+    await waitFor(() => expect(pillDays()).toHaveLength(4))
+    await userEvent.click(document.querySelector('[data-day="2026-11-16"]') as HTMLElement)
+    const sheet = await screen.findByRole('dialog', { name: 'lundi 16 novembre' })
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Annuler' }))
+    await waitForElementToBeRemoved(() => screen.queryByRole('dialog'))
+    expect(visited.at(-1)).toBe('/progression/calendrier?mois=2026-11')
+    expect(visited.some((v) => v.startsWith('/seances'))).toBe(false)
+  })
+
   it('toucher la semaine revient au bilan de cette semaine', async () => {
     renderAt('/progression/calendrier?mois=2026-11')
     await screen.findByRole('heading', { name: 'novembre 2026' })
@@ -161,5 +172,13 @@ describe('Calendrier', () => {
     expect(within(oct).getAllByRole('button').map((b) => b.textContent)).toEqual(['lun. 26 oct. · Push · 1 exercice · 2 séries'])
     await userEvent.click(within(nov).getAllByRole('button')[2])
     await waitFor(() => expect(visited).toContain(`/seances/${ids.nov16}`))
+  })
+
+  it('liste vide : invitation vers l\'onglet Séance', async () => {
+    await db.sets.clear()
+    await db.sessions.clear()
+    renderAt('/progression/seances')
+    expect(await screen.findByText('Aucune séance enregistrée')).toBeInTheDocument()
+    expect(screen.queryByRole('region')).not.toBeInTheDocument()
   })
 })

@@ -1,24 +1,27 @@
 /* Historique — calendrier et liste ; complète progress.css (mêmes jetons de theme.css). */
 .h-month { flex: 1; margin: 0; text-align: center; font-size: 17px; font-weight: 700; }
 
-.prog .h-cal { padding: 8px 6px 10px; }
-.h-row { display: grid; grid-template-columns: 34px repeat(7, minmax(0, 1fr)); align-items: stretch; }
+/* Zones tactiles à 375 pt : 375 − 2 × 16 (app-main) = 343 ; carte 2 px de chaque côté → 339 ;
+   colonne semaine 28 px → 7 jours de (339 − 28) / 7 ≈ 44,4 px de large, 52 px de haut.
+   Le bouton de semaine (28 px visibles) étend sa zone de 16 px à gauche dans la marge de la page → 44 × 52. */
+.prog .h-cal { padding: 8px 2px 10px; }
+.h-row { display: grid; grid-template-columns: 28px repeat(7, minmax(44px, 1fr)); align-items: stretch; }
 .h-head span { text-align: center; font-size: 12px; font-weight: 600; color: var(--faint); padding: 4px 0 6px; }
 
-.prog .h-week { min-height: 52px; display: grid; place-items: center; border-radius: var(--radius-control); color: var(--faint); transition: background-color var(--dur-fast) var(--ease); }
-.prog .h-week:active { background: var(--surface-2); }
-.h-week svg { width: 16px; height: 16px; }
+.prog .h-week { position: relative; min-height: 52px; display: grid; place-items: center; color: var(--faint); }
+.prog .h-week::before { content: ''; position: absolute; top: 0; bottom: 0; left: -16px; right: 0; border-radius: var(--radius-control); transition: background-color var(--dur-fast) var(--ease); }
+.prog .h-week:active::before { background: var(--surface-2); }
+.h-week svg { position: relative; width: 16px; height: 16px; }
 
-.h-day {
-  min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px;
-  padding-top: 6px; margin: 1px; border-radius: var(--radius-control); border: 1.5px solid transparent;
-  transition: background-color var(--dur-fast) var(--ease);
+.h-day { min-height: 52px; display: flex; padding: 1px; }
+.prog button.h-day { padding: 1px; text-align: center; }
+.h-day-in {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding-top: 5px;
+  border-radius: var(--radius-control); border: 1.5px solid transparent; transition: background-color var(--dur-fast) var(--ease);
 }
-.prog button.h-day { text-align: center; padding-top: 6px; border: 1.5px solid transparent; }
-.prog button.h-day:active { background: var(--surface-2); }
+.prog button.h-day:active .h-day-in { background: var(--surface-2); }
 .h-day.is-out, .h-day.is-future { color: var(--faint); }
-.h-day.is-out { opacity: 0.55; }
-.prog .h-day.is-today { border-color: var(--text); }
+.h-day.is-today .h-day-in { border-color: var(--text); }
 .h-num { font-size: 17px; line-height: 1.1; }
 .h-pill { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--text); }
 .h-pill svg { width: 14px; height: 14px; }

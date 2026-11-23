@@ -10,12 +10,13 @@ import SessionListPage from './features/history/SessionListPage'
 import SettingsPage from './features/settings/SettingsPage'
 import InstallBanner from './features/shell/InstallBanner'
 import ErrorBoundary from './features/shell/ErrorBoundary'
+import { DumbbellPath } from './features/shell/icons'
 
 // Recharts n'est chargé qu'à l'ouverture d'une courbe (bloc séparé, précaché par le service worker).
 const ExerciseChartPage = lazy(() => import('./features/progress/ExerciseChartPage'))
 
 const TABS = [
-  { to: '/', label: 'Séance', end: true, icon: <path d="M3 9v6M6.5 6v12M17.5 6v12M21 9v6M6.5 12h11" /> },
+  { to: '/', label: 'Séance', end: true, icon: <DumbbellPath /> },
   { to: '/programmes', label: 'Programmes', end: false, icon: <path d="M5 6h14M5 12h14M5 18h9" /> },
   { to: '/progression', label: 'Progression', end: false, icon: <path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6" /> },
   {

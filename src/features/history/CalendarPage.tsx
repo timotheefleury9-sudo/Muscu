@@ -7,17 +7,11 @@ import { EASE, T, T_FAST } from '../session/motion'
 import { shortDate } from '../progress/labels'
 import { BackButton, IconLeft, IconRight, ProgressScreen, type BackState } from '../progress/parts'
 import { useAppData } from '../progress/useAppData'
+import { DumbbellIcon } from '../shell/icons'
 import { currentMonth, longDay, monthFromParam, monthLabel, timeLabel } from './labels'
 import './history.css'
 
 const WEEKDAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
-
-/** Même tracé que l'icône de l'onglet Séance (App.tsx). */
-const Dumbbell = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M3 9v6M6.5 6v12M17.5 6v12M21 9v6M6.5 12h11" />
-  </svg>
-)
 
 const WeekIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -94,11 +88,12 @@ export default function CalendarPage() {
                 const list = days?.[day] ?? []
                 const outside = !day.startsWith(`${month}-`)
                 const cls = ['h-day', outside && 'is-out', day > today && 'is-future', day === today && 'is-today'].filter(Boolean).join(' ')
+                // La cellule entière est la zone tactile ; l'encadré visuel (jour courant, appui) est intérieur.
                 const content = (
-                  <>
+                  <span className="h-day-in">
                     <span className="h-num num">{Number(day.slice(8))}</span>
-                    {list.length > 0 && <span className="h-pill"><Dumbbell /></span>}
-                  </>
+                    {list.length > 0 && <span className="h-pill"><DumbbellIcon /></span>}
+                  </span>
                 )
                 const current = day === today ? ('date' as const) : undefined
                 return list.length > 0 ? (
