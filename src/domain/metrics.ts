@@ -63,6 +63,16 @@ function weeksOf(data: AppData, exerciseId: string): WeekEntry[] {
   return [...byWeek.entries()].map(([week, sets]) => ({ week, sets })).sort((a, b) => (a.week < b.week ? -1 : 1))
 }
 
+/** Série au poids max de la semaine, avec les meilleures reps à ce poids (base de l'évolution, §7). */
+function topOf(sets: PerformedSet[]): PerformedSet {
+  let top = sets[0]
+  for (const s of sets.slice(1)) {
+    if (s.weight > top.weight + EPS || (Math.abs(s.weight - top.weight) <= EPS && s.reps > top.reps)) top = s
+  }
+  return top
+}
+
+/** Évolution : hausse du poids max, sinon plus de reps au même poids max, sinon « = ». */
 function deltaOf(best: PerformedSet, prev: PerformedSet | undefined): Delta {
   if (!prev) return { kind: 'new' }
   if (best.weight > prev.weight + EPS) return { kind: 'weight', value: Math.round((best.weight - prev.weight) * 100) / 100 }
@@ -71,12 +81,13 @@ function deltaOf(best: PerformedSet, prev: PerformedSet | undefined): Delta {
 }
 
 function exerciseWeek(ex: Exercise, weeks: WeekEntry[], at: number): ExerciseWeek {
-  const bests = weeks.slice(0, at + 1).map(w => bestOf(w.sets, ex.bodyweight))
-  const best = bests[at]
-  const delta = deltaOf(best, bests[at - 1])
+  const best = bestOf(weeks[at].sets, ex.bodyweight)
+  // Au poids du corps, bestOf compare déjà (lest, puis reps) : identique à topOf.
+  const tops = weeks.slice(0, at + 1).map(w => topOf(w.sets))
+  const delta = deltaOf(tops[at], tops[at - 1])
   let stagnantWeeks = 0
   for (let i = at; i >= 0; i--) {
-    if (deltaOf(bests[i], bests[i - 1]).kind !== 'same') break
+    if (deltaOf(tops[i], tops[i - 1]).kind !== 'same') break
     stagnantWeeks++
   }
   const earlier = weeks.slice(0, at).flatMap(w => w.sets)

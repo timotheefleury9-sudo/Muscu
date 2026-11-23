@@ -69,6 +69,35 @@ describe('weeklySummary', () => {
     expect(e.delta).toEqual({ kind: 'same' })
     expect(e.isRecord).toBe(true)
   })
+  it('delta = hausse du poids max de la semaine : 100x5 -> 100x5 + 105x1 = +5 kg', () => {
+    const d = base([sess('a', W1), sess('b', W2)], [set('a', 'dev', 100, 5), set('b', 'dev', 100, 5), set('b', 'dev', 105, 1)])
+    const e = weeklySummary(d, '2026-11-09').exercises[0]
+    expect(e.delta).toEqual({ kind: 'weight', value: 5 })
+    expect(e.best).toEqual({ weight: 100, reps: 5 })
+    expect(e.isRecord).toBe(false)
+  })
+  it('delta reps = meilleures reps au poids max (même poids max)', () => {
+    const d = base(
+      [sess('a', W1), sess('b', W2)],
+      [set('a', 'dev', 100, 3), set('a', 'dev', 90, 10), set('b', 'dev', 100, 4), set('b', 'dev', 80, 6)],
+    )
+    expect(weeklySummary(d, '2026-11-09').exercises[0].delta).toEqual({ kind: 'reps', value: 1 })
+  })
+  it('poids max en baisse => same, même si meilleur e1RM', () => {
+    const d = base([sess('a', W1), sess('b', W2)], [set('a', 'dev', 105, 1), set('a', 'dev', 90, 5), set('b', 'dev', 100, 8)])
+    expect(weeklySummary(d, '2026-11-09').exercises[0].delta).toEqual({ kind: 'same' })
+  })
+  it('stagnantWeeks suit le delta au poids max', () => {
+    const wk = (i: number) => new Date(2026, 10, 2 + 7 * i, 18)
+    const sessions = [0, 1, 2].map(i => sess(`s${i}`, wk(i)))
+    // e1RM en hausse chaque semaine, mais poids max et reps au poids max identiques.
+    const sets = [
+      set('s0', 'dev', 100, 3), set('s0', 'dev', 80, 8),
+      set('s1', 'dev', 100, 3), set('s1', 'dev', 80, 10),
+      set('s2', 'dev', 100, 3), set('s2', 'dev', 80, 12),
+    ]
+    expect(weeklySummary(base(sessions, sets), '2026-11-16').exercises[0].stagnantWeeks).toBe(2)
+  })
   it('recordsCount : première séance non record', () => {
     expect(weeklySummary(data, '2026-11-02').recordsCount).toBe(0)
     expect(weeklySummary(data, '2026-11-09').recordsCount).toBe(1)
