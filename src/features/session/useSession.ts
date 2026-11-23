@@ -126,7 +126,12 @@ export function useSession() {
 
   useEffect(() => {
     let cancelled = false
-    load(() => cancelled).catch((e: unknown) => console.error('Chargement de la séance échoué', e))
+    // Au (re)montage, attendre les écritures d'une instance précédente (ex. création de séance en cours) :
+    // sinon la séance encore non écrite serait invisible et une seconde serait créée.
+    // (Pas dans load : elle s'exécute aussi depuis la file d'écritures, qui s'attendrait elle-même.)
+    pendingWrites()
+      .then(() => load(() => cancelled))
+      .catch((e: unknown) => console.error('Chargement de la séance échoué', e))
     return () => { cancelled = true }
   }, [load])
 

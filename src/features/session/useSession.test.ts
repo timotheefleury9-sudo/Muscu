@@ -78,4 +78,31 @@ describe('useSession', () => {
     await saveExercise({ ...(await db.exercises.get('Dumbbell_Bench_Press'))!, increment: 2.5 })
     expect(await proposed()).toEqual([26.5, 26.5, 26.5])
   })
+
+  it('un remontage pendant la création de la séance ne crée pas de seconde séance', async () => {
+    const first = renderHook(() => useSession())
+    await waitFor(() => expect(first.result.current.state.status).toBe('ready'))
+    const set = first.result.current.state.items[0].sets[0]
+    const realTransaction = db.transaction.bind(db) as (...a: unknown[]) => Promise<unknown>
+    let release!: () => void
+    const gate = new Promise<void>((r) => { release = r })
+    let calls = 0
+    const tx = vi.spyOn(db, 'transaction').mockImplementation(((...args: unknown[]) => {
+      calls++
+      return calls === 1 ? gate.then(() => realTransaction(...args)) : realTransaction(...args)
+    }) as unknown as typeof db.transaction)
+    act(() => { first.result.current.updateSet(0, set.id, { weight: 20 }) })
+    await waitFor(() => expect(calls).toBe(1))
+    first.unmount()
+
+    const second = renderHook(() => useSession())
+    release()
+    await waitFor(() => expect(second.result.current.state.status).toBe('ready'))
+    expect(second.result.current.state.session).not.toBeNull()
+    const s2 = second.result.current.state.items[0].sets[0]
+    act(() => { second.result.current.toggleDone(0, s2.id) })
+    await pendingWrites()
+    tx.mockRestore()
+    expect(await db.sessions.count()).toBe(1)
+  })
 })
