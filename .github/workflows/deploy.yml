@@ -24,7 +24,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx vitest run
+      - run: npm test
       - run: npm run build
       # Liens profonds : GitHub Pages sert 404.html, qui charge la même appli.
       - run: cp dist/index.html dist/404.html

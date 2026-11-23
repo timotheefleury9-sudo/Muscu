@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { formatWeight } from '../../domain/parseWeight'
 import { isBlank, sessionHint } from '../../domain/sessionFlow'
@@ -50,12 +50,18 @@ interface ExerciseCardProps {
 
 export default function ExerciseCard({ item, index, active, complete, onActivate, onToggle, onChange, onAdd, onRemove, onNext }: ExerciseCardProps) {
   const { exercise, te, sets, suggestion } = item
-  const [openId, setOpenId] = useState<string | null>(null)
-
-  // Carte ouverte : la série ouverte par défaut est la première non validée.
-  useEffect(() => {
-    if (active && !sets.some((s) => s.id === openId)) setOpenId(sets.find((s) => !s.done)?.id ?? null)
-  }, [active]) // seule l'ouverture de la carte déclenche ce choix
+  // Série ouverte : choix de l'utilisateur (id, ou null = tout replié), sinon par défaut la première non validée.
+  // Calculée au rendu (pas dans un effet) pour que la carte s'affiche ouverte dès sa première image.
+  const [choice, setChoice] = useState<{ id: string | null } | null>(null)
+  const [wasActive, setWasActive] = useState(active)
+  if (wasActive !== active) {
+    setWasActive(active)
+    if (!active) setChoice(null) // carte repliée : au retour, on repart du choix par défaut
+  }
+  const openId = choice && (choice.id === null || sets.some((s) => s.id === choice.id))
+    ? choice.id
+    : (sets.find((s) => !s.done)?.id ?? null)
+  const setOpenId = (id: string | null) => setChoice({ id })
 
   const done = sets.filter((s) => s.done).length
   const slot = { sets: te.sets, repsMin: te.repsMin, repsMax: te.repsMax }

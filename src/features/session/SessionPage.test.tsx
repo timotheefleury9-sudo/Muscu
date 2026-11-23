@@ -133,6 +133,27 @@ describe('SessionPage', () => {
     expect(await doneSets()).toHaveLength(0)
   })
 
+  it('la carte active est ouverte sur sa première série dès l’image qui affiche les séries', async () => {
+    // Pas de findBy ici : on s'arrête au tout premier commit qui affiche les séries, sans laisser React
+    // exécuter ses effets. Régression CI : l'éditeur était ouvert par un useEffect, une tâche plus tard.
+    await withHistory()
+    const g = globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
+    const prev = g.IS_REACT_ACT_ENVIRONMENT
+    g.IS_REACT_ACT_ENVIRONMENT = false // comme le fait l'asyncWrapper de Testing Library pendant une attente
+    try {
+      render(<SessionPage />)
+      await new Promise<void>((resolve) => {
+        const mo = new MutationObserver(() => {
+          if (screen.queryByRole('button', { name: 'Valider la série 1' })) { mo.disconnect(); resolve() }
+        })
+        mo.observe(document.body, { subtree: true, childList: true })
+      })
+      expect(screen.getByRole('button', { name: 'Plus de poids' })).toBeInTheDocument()
+    } finally {
+      g.IS_REACT_ACT_ENVIRONMENT = prev
+    }
+  })
+
   it('les boutons +/− suivent l’incrément de l’exercice et sont enregistrés', async () => {
     await withHistory()
     render(<SessionPage />)
