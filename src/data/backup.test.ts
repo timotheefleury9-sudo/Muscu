@@ -55,3 +55,15 @@ describe('backup', () => {
     expect(sorted(await loadAll())).toEqual(before)
   })
 })
+
+describe('import : normalisation du catalogue', () => {
+  it('aligne les exercices du catalogue sur le catalogue livré, sans toucher aux personnalisés', async () => {
+    const { CATALOG } = await import('./catalog')
+    const { category: _c, ...hamstring } = CATALOG.find((e) => e.id === '90_90_Hamstring')!
+    const custom = { id: 'perso', name: 'Perso', primaryGroup: 'dos', secondaryGroups: [], equipment: 'barre', kind: 'isolation', increment: 2, bodyweight: false, custom: true }
+    const json = JSON.stringify({ format: 'muscu-backup', version: 1, exportedAt: 'x', data: { exercises: [hamstring, custom], templates: [], templateExercises: [], sessions: [], sets: [] } })
+    expect(await importData(json)).toEqual({ ok: true })
+    expect((await db.exercises.get('90_90_Hamstring'))!.category).toBe('stretching')
+    expect(await db.exercises.get('perso')).toEqual(custom)
+  })
+})

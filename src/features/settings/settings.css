@@ -1,0 +1,31 @@
+/* Réglages : cartes et pilules de theme.css, feuille de confirmation partagée (session.css). */
+.set .set-title { font-size: 34px; font-weight: 800; font-stretch: 85%; letter-spacing: -0.02em; margin: 8px 4px 16px; line-height: 1.05; }
+.set-card { background: var(--surface); border-radius: var(--radius-card); padding: 18px; margin-bottom: 12px; }
+.set-card h2 { margin: 0 0 4px; font-size: 19px; }
+.set-card p { margin: 0 0 14px; color: var(--text-muted); font-size: 14px; line-height: 1.45; }
+.set-actions { display: flex; gap: 8px; }
+.set .set-btn {
+  flex: 1; min-height: 54px; border: 0; border-radius: var(--radius-pill); background: var(--surface-2); color: var(--text);
+  font: inherit; font-weight: 700; font-size: 17px; cursor: pointer; transition: background-color var(--dur-fast) var(--ease);
+}
+.set .set-btn:active { background: var(--border); }
+.set .set-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.set .set-btn:disabled { cursor: default; opacity: 0.6; }
+.set-reminder { background: var(--warning-soft); }
+.set-reminder p { margin: 0; color: var(--text); font-size: 14px; font-weight: 600; }
+.set-msg { margin: 12px 4px 0; font-size: 15px; font-weight: 600; line-height: 1.4; }
+.set-msg.is-error { color: var(--danger); }
+.set-msg.is-ok { color: var(--success); }
+.set-file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* Bandeau d'installation : discret, au-dessus du contenu */
+.install-banner {
+  flex: none; display: flex; align-items: center; gap: 4px; margin: 4px calc(var(--safe-right) + 12px) 0 calc(var(--safe-left) + 12px);
+  padding: 4px 4px 4px 14px; border-radius: 16px; background: var(--surface); color: var(--text-muted); font-size: 13px; line-height: 1.35;
+}
+.install-banner span { flex: 1; }
+.install-banner button {
+  flex: none; width: 44px; height: 44px; display: grid; place-items: center; border: 0; background: none; color: var(--text-muted); cursor: pointer;
+}
+.install-banner button:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; border-radius: 12px; }
+.install-banner svg { width: 18px; height: 18px; }

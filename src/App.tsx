@@ -6,6 +6,7 @@ import TemplateEditor from './features/programs/TemplateEditor'
 import WeekSummaryPage from './features/progress/WeekSummaryPage'
 import MuscleDetailPage from './features/progress/MuscleDetailPage'
 import SettingsPage from './features/settings/SettingsPage'
+import InstallBanner from './features/shell/InstallBanner'
 
 // Recharts n'est chargé qu'à l'ouverture d'une courbe (bloc séparé, précaché par le service worker).
 const ExerciseChartPage = lazy(() => import('./features/progress/ExerciseChartPage'))
@@ -31,6 +32,7 @@ export default function App() {
   return (
     <div className="app">
       <div className="topbar" aria-hidden="true" />
+      <InstallBanner />
       <main className="app-main">
         <Routes>
           <Route path="/" element={<SessionPage />} />

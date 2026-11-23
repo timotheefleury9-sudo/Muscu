@@ -1,5 +1,6 @@
 import { db } from './db'
 import { loadAll } from './repo'
+import { normalizeCatalogExercise } from './catalog'
 import type { AppData } from '../domain/types'
 
 const FORMAT = 'muscu-backup'
@@ -32,7 +33,7 @@ function validate(json: string): { ok: true; data: AppData } | { ok: false; erro
 export async function importData(json: string): Promise<{ ok: true } | { ok: false; error: string }> {
   const v = validate(json)
   if (!v.ok) return v
-  const { data } = v
+  const data: AppData = { ...v.data, exercises: v.data.exercises.map(normalizeCatalogExercise) }
   try {
     await db.transaction('rw', [db.exercises, db.templates, db.templateExercises, db.sessions, db.sets], async () => {
       await Promise.all(KEYS.map((k) => db[k].clear()))
